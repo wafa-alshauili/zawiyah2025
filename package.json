@@ -4,12 +4,13 @@
   "description": "نظام حجوزات القاعات الدراسية المتزامن - Synchronized School Classroom Reservation System",
   "main": "server/index.js",
   "scripts": {
+    "start": "cd server && npm start",
+    "build": "cd server && npm install",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "server:dev": "nodemon server/index.js",
     "client:dev": "cd client && npm run dev",
-    "build": "cd client && npm run build",
-    "start": "cd client && npm run start",
-    "install:all": "npm install && cd client && npm install"
+    "client:build": "cd client && npm run build",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install"
   },
   "keywords": [
     "school",
