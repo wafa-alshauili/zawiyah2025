@@ -429,23 +429,29 @@ export default function BookingsPage() {
 
   // البحث عن حجوزات المعلم
   const findTeacherBookings = (phone: string) => {
+    console.log('🔍 البحث عن الهاتف:', phone)
     const teacherBookings = []
     for (const [key, booking] of Object.entries(bookings)) {
+      console.log(`🔍 فحص الحجز ${key}:`, booking)
       if (booking.phone === phone) {
+        console.log('✅ تم العثور على مطابقة!')
         teacherBookings.push({ key, booking })
       }
     }
+    console.log('📋 إجمالي الحجوزات الموجودة:', teacherBookings.length)
     return teacherBookings
   }
 
   // فتح نافذة حجوزات المعلم
   const openTeacherBookingsModal = () => {
+    console.log('📄 فتح نافذة حجوزات المعلم')
     setShowTeacherBookings(true)
     setTeacherBookingsList([])
   }
 
   // إغلاق نافذة حجوزات المعلم
   const closeTeacherBookingsModal = () => {
+    console.log('✖️ إغلاق نافذة حجوزات المعلم')
     setShowTeacherBookings(false)
     setTeacherPhone('')
     setTeacherBookingsList([])
@@ -453,9 +459,12 @@ export default function BookingsPage() {
 
   // البحث عن حجوزات المعلم
   const searchTeacherBookings = () => {
-    const bookings = findTeacherBookings(teacherPhone)
-    setTeacherBookingsList(bookings)
-    if (bookings.length === 0) {
+    console.log('🔍 البحث عن حجوزات للرقم:', teacherPhone)
+    console.log('📊 جميع الحجوزات المتاحة:', bookings)
+    const foundBookings = findTeacherBookings(teacherPhone)
+    console.log('📋 الحجوزات الموجودة:', foundBookings)
+    setTeacherBookingsList(foundBookings)
+    if (foundBookings.length === 0) {
       alert('لا توجد حجوزات لهذا الرقم')
     }
   }
