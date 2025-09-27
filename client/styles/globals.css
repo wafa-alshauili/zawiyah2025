@@ -1,0 +1,189 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Arabic font import */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
+
+/* Global styles */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  direction: rtl;
+  font-family: 'Tajawal', Arial, sans-serif;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Custom components */
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-soft p-6 border border-gray-100;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+  
+  .time-slot {
+    @apply border-2 border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary-300 transition-colors duration-200;
+  }
+  
+  /* Mobile-first responsive improvements */
+  .mobile-optimized {
+    @apply touch-manipulation select-none;
+  }
+  
+  .mobile-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4;
+  }
+  
+  .mobile-btn {
+    @apply px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base rounded-lg font-medium transition-all duration-200 touch-manipulation;
+  }
+  
+  .mobile-card {
+    @apply bg-white rounded-lg shadow-soft p-3 sm:p-6 border border-gray-100 mb-4 sm:mb-6;
+  }
+  
+  .mobile-input {
+    @apply w-full px-3 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent touch-manipulation;
+  }
+  
+  .mobile-modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50;
+  }
+  
+  .mobile-modal-content {
+    @apply bg-white rounded-lg w-full max-w-lg max-h-screen overflow-y-auto p-4 sm:p-6;
+  }
+  
+  /* Touch-friendly time slots */
+  .time-slot-mobile {
+    @apply min-h-12 sm:min-h-16 text-xs sm:text-sm border-2 border-gray-200 rounded-lg p-2 sm:p-3 text-center cursor-pointer transition-all duration-200 touch-manipulation;
+  }
+  
+  .time-slot-mobile:hover,
+  .time-slot-mobile:active {
+    @apply border-primary-300 bg-primary-50 transform scale-105;
+  }
+  
+  /* Booking grid optimizations */
+  .booking-grid {
+    @apply grid gap-1 sm:gap-2 text-xs sm:text-sm;
+    grid-template-columns: 100px 1fr;
+  }
+  
+  @media (min-width: 640px) {
+    .booking-grid {
+      grid-template-columns: 120px 1fr;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .booking-grid {
+      grid-template-columns: 150px 1fr;
+    }
+  }
+  
+  /* Scrollable horizontal tables on mobile */
+  .mobile-scroll {
+    @apply overflow-x-auto -mx-4 sm:mx-0;
+  }
+  
+  .mobile-table {
+    @apply min-w-full table-auto border-collapse;
+  }
+  
+  /* Status indicators */
+  .status-available {
+    @apply bg-green-100 border-green-300 text-green-800 hover:bg-green-200;
+  }
+  
+  .status-booked {
+    @apply bg-red-100 border-red-300 text-red-800 cursor-not-allowed;
+  }
+  
+  .status-selected {
+    @apply bg-blue-100 border-blue-500 text-blue-800 ring-2 ring-blue-300;
+  }
+  
+  .time-slot.available {
+    @apply bg-green-50 border-green-200 hover:bg-green-100;
+  }
+  
+  .time-slot.booked {
+    @apply bg-red-50 border-red-200 cursor-not-allowed;
+  }
+  
+  .time-slot.selected {
+    @apply bg-primary-50 border-primary-500;
+  }
+}
+
+/* RTL-specific adjustments */
+.rtl {
+  direction: rtl;
+}
+
+.rtl .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.rtl .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+/* Loading animation */
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Toast notifications */
+.toast {
+  @apply fixed top-4 right-4 z-50 bg-white border-r-4 shadow-medium rounded-lg p-4 min-w-80;
+}
+
+.toast.success {
+  @apply border-success-500;
+}
+
+.toast.error {
+  @apply border-error-500;
+}
+
+.toast.warning {
+  @apply border-warning-500;
+}

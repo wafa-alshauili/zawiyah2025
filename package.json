@@ -1,0 +1,40 @@
+{
+  "name": "zawiyah2025",
+  "version": "1.0.0",
+  "description": "نظام حجوزات القاعات الدراسية المتزامن - Synchronized School Classroom Reservation System",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "nodemon server/index.js",
+    "client:dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd client && npm run start",
+    "install:all": "npm install && cd client && npm install"
+  },
+  "keywords": [
+    "school",
+    "reservation",
+    "classroom",
+    "real-time",
+    "arabic",
+    "education"
+  ],
+  "author": "Zawiyah2025 Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "moment": "^2.29.4",
+    "moment-hijri": "^2.1.2",
+    "mongoose": "^7.5.0",
+    "next": "^14.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "nodemon": "^3.0.1"
+  }
+}

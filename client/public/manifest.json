@@ -1,0 +1,42 @@
+{
+  "name": "زاوية 2025 - نظام حجز القاعات المدرسية",
+  "short_name": "زاوية 2025",
+  "description": "نظام حجز القاعات المدرسية مع التزامن الفوري بين الأجهزة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "scope": "/",
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

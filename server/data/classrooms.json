@@ -1,0 +1,290 @@
+[
+  {
+    "id": 1,
+    "name_ar": "القاعة الذكية",
+    "type": "smart",
+    "equipment": [
+      "projector",
+      "smartboard",
+      "sound_system"
+    ],
+    "isActive": true
+  },
+  {
+    "id": 2,
+    "name_ar": "ساحة الطابور القديم",
+    "type": "assembly",
+    "capacity": 200,
+    "isActive": true
+  },
+  {
+    "id": 3,
+    "name_ar": "الصف 5أ",
+    "type": "classroom",
+    "grade": 5,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 4,
+    "name_ar": "الصف 5ب",
+    "type": "classroom",
+    "grade": 5,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 5,
+    "name_ar": "الصف 5ج",
+    "type": "classroom",
+    "grade": 5,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 6,
+    "name_ar": "الصف 6أ",
+    "type": "classroom",
+    "grade": 6,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 7,
+    "name_ar": "الصف 6ب",
+    "type": "classroom",
+    "grade": 6,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 8,
+    "name_ar": "الصف 6ج",
+    "type": "classroom",
+    "grade": 6,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 9,
+    "name_ar": "الصف 7أ",
+    "type": "classroom",
+    "grade": 7,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 10,
+    "name_ar": "الصف 7ب",
+    "type": "classroom",
+    "grade": 7,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 11,
+    "name_ar": "الصف 7ج",
+    "type": "classroom",
+    "grade": 7,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 12,
+    "name_ar": "الصف 8أ",
+    "type": "classroom",
+    "grade": 8,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 13,
+    "name_ar": "الصف 8ب",
+    "type": "classroom",
+    "grade": 8,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 14,
+    "name_ar": "الصف 8ج",
+    "type": "classroom",
+    "grade": 8,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 15,
+    "name_ar": "الصف 9أ",
+    "type": "classroom",
+    "grade": 9,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 16,
+    "name_ar": "الصف 9ب",
+    "type": "classroom",
+    "grade": 9,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 17,
+    "name_ar": "الصف 9ج",
+    "type": "classroom",
+    "grade": 9,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 18,
+    "name_ar": "الصف 10أ",
+    "type": "classroom",
+    "grade": 10,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 19,
+    "name_ar": "الصف 10ب",
+    "type": "classroom",
+    "grade": 10,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 20,
+    "name_ar": "الصف 10ج",
+    "type": "classroom",
+    "grade": 10,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 21,
+    "name_ar": "الصف 11أ",
+    "type": "classroom",
+    "grade": 11,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 22,
+    "name_ar": "الصف 11ب",
+    "type": "classroom",
+    "grade": 11,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 23,
+    "name_ar": "الصف 11ج",
+    "type": "classroom",
+    "grade": 11,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 24,
+    "name_ar": "الصف 11د",
+    "type": "classroom",
+    "grade": 11,
+    "section": "د",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 25,
+    "name_ar": "الصف 11هـ",
+    "type": "classroom",
+    "grade": 11,
+    "section": "هـ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 26,
+    "name_ar": "الصف 11و",
+    "type": "classroom",
+    "grade": 11,
+    "section": "و",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 27,
+    "name_ar": "الصف 12أ",
+    "type": "classroom",
+    "grade": 12,
+    "section": "أ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 28,
+    "name_ar": "الصف 12ب",
+    "type": "classroom",
+    "grade": 12,
+    "section": "ب",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 29,
+    "name_ar": "الصف 12ج",
+    "type": "classroom",
+    "grade": 12,
+    "section": "ج",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 30,
+    "name_ar": "الصف 12د",
+    "type": "classroom",
+    "grade": 12,
+    "section": "د",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 31,
+    "name_ar": "الصف 12هـ",
+    "type": "classroom",
+    "grade": 12,
+    "section": "هـ",
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 32,
+    "name_ar": "الصف 12و",
+    "type": "classroom",
+    "grade": 12,
+    "section": "و",
+    "capacity": 30,
+    "isActive": true
+  }
+]
