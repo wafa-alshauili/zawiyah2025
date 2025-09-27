@@ -188,6 +188,7 @@ export default function BookingsPage() {
   const classrooms = [
     // القاعات الخاصة
     'القاعة الذكية',
+    'قاعة المصادر',
     'ساحة الطابور القديم',
     
     // الصف الخامس

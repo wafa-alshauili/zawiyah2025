@@ -7,6 +7,7 @@ import {
   FaUsers, 
   FaChalkboardTeacher,
   FaProjectDiagram,
+  FaBook,
   FaPlus,
   FaEdit,
   FaEye,
@@ -94,6 +95,7 @@ export default function Rooms() {
   const getTypeLabel = (type: string) => {
     const types: Record<string, string> = {
       'smart': 'القاعة الذكية',
+      'resource_center': 'قاعة المصادر',
       'assembly': 'ساحة الطابور',
       'classroom': 'قاعة دراسية',
       'lab': 'مختبر'
@@ -105,6 +107,8 @@ export default function Rooms() {
     switch (type) {
       case 'smart':
         return <FaChalkboardTeacher className="w-5 h-5 text-blue-500" />
+      case 'resource_center':
+        return <FaBook className="w-5 h-5 text-indigo-500" />
       case 'assembly':
         return <FaUsers className="w-5 h-5 text-green-500" />
       case 'classroom':
