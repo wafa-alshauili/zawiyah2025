@@ -27,13 +27,32 @@ const io = socketIo(server, {
   }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
+
+// Health check endpoint for Render
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    message: 'Zawiyah Server is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'مرحباً بك في نظام زاوية لحجز القاعات',
+    status: 'active',
+    endpoints: ['/api/classrooms', '/api/bookings', '/api/stats']
+  });
+});;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

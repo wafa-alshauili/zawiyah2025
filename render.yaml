@@ -1,0 +1,12 @@
+# Render deployment configuration
+# This file tells Render how to build and run the server
+
+# Build settings
+build_command = "npm install"
+start_command = "npm start"
+
+# Environment
+node_version = "18"
+
+# Health check
+health_check_path = "/api/health"

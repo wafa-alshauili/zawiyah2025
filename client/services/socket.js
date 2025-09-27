@@ -17,8 +17,8 @@ class SocketService {
         if (hostname === 'localhost' || hostname.startsWith('192.168')) {
           serverPath = `http://${hostname}:3001`;
         } else {
-          // للنشر على الإنترنت - سيتم تحديث هذا الرابط
-          serverPath = 'https://zawiyah-server-production.up.railway.app';
+          // للنشر على الإنترنت - Render server
+          serverPath = 'https://zawiyah2025-server.onrender.com';
         }
       } else {
         serverPath = 'http://localhost:3001';
