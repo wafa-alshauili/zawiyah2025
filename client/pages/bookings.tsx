@@ -429,29 +429,23 @@ export default function BookingsPage() {
 
   // البحث عن حجوزات المعلم
   const findTeacherBookings = (phone: string) => {
-    console.log('🔍 البحث عن الهاتف:', phone)
     const teacherBookings = []
     for (const [key, booking] of Object.entries(bookings)) {
-      console.log(`🔍 فحص الحجز ${key}:`, booking)
       if (booking.phone === phone) {
-        console.log('✅ تم العثور على مطابقة!')
         teacherBookings.push({ key, booking })
       }
     }
-    console.log('📋 إجمالي الحجوزات الموجودة:', teacherBookings.length)
     return teacherBookings
   }
 
   // فتح نافذة حجوزات المعلم
   const openTeacherBookingsModal = () => {
-    console.log('📄 فتح نافذة حجوزات المعلم')
     setShowTeacherBookings(true)
     setTeacherBookingsList([])
   }
 
   // إغلاق نافذة حجوزات المعلم
   const closeTeacherBookingsModal = () => {
-    console.log('✖️ إغلاق نافذة حجوزات المعلم')
     setShowTeacherBookings(false)
     setTeacherPhone('')
     setTeacherBookingsList([])
@@ -459,13 +453,18 @@ export default function BookingsPage() {
 
   // البحث عن حجوزات المعلم
   const searchTeacherBookings = () => {
-    console.log('🔍 البحث عن حجوزات للرقم:', teacherPhone)
-    console.log('📊 جميع الحجوزات المتاحة:', bookings)
-    const foundBookings = findTeacherBookings(teacherPhone)
-    console.log('📋 الحجوزات الموجودة:', foundBookings)
+    if (!teacherPhone || teacherPhone.length < 10) {
+      alert('يرجى إدخال رقم هاتف صحيح (10 أرقام)')
+      return
+    }
+    
+    const foundBookings = findTeacherBookings(teacherPhone.trim())
     setTeacherBookingsList(foundBookings)
+    
     if (foundBookings.length === 0) {
-      alert('لا توجد حجوزات لهذا الرقم')
+      alert('لا توجد حجوزات لهذا الرقم. تأكد من الرقم المدخل.')
+    } else {
+      alert(`تم العثور على ${foundBookings.length} حجز لهذا الرقم`)
     }
   }
 
