@@ -12,7 +12,6 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.ico" />
         
         {/* Arabic RTL support */}
-        <html lang="ar" dir="rtl" />
       </Head>
       
       <div className="min-h-screen bg-gray-50 rtl">
