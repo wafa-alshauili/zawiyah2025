@@ -18,7 +18,7 @@ class SocketService {
           serverPath = `http://${hostname}:3001`;
         } else {
           // للنشر على الإنترنت - Render server
-          serverPath = 'https://zawiyah2025-server.onrender.com';
+          serverPath = 'https://zawiyah2025.onrender.com';
         }
       } else {
         serverPath = 'http://localhost:3001';
