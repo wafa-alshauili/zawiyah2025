@@ -63,7 +63,16 @@ export default function Rooms() {
 
   const fetchClassrooms = async () => {
     try {
-      const response = await fetch('/api/classrooms')
+      // تحديد عنوان الخادم
+      let serverUrl = 'http://localhost:3001';
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname !== 'localhost' && !hostname.startsWith('192.168')) {
+          serverUrl = 'https://zawiyah2025.onrender.com';
+        }
+      }
+      
+      const response = await fetch(`${serverUrl}/api/classrooms`)
       const data = await response.json()
       if (data.success) {
         setClassrooms(data.data)
