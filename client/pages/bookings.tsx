@@ -26,8 +26,17 @@ export default function BookingsPage() {
     // الاتصال بالخادم
     socketService.connect()
     
-    // تحميل البيانات من localStorage كنسخة احتياطية
+    // تحميل البيانات من localStorage كنسخة مؤقتة
+    // سيتم استبدالها ببيانات الخادم خلال ثواني
     loadBookingsFromStorage()
+    
+    // إضافة timeout للتأكد من طلب البيانات من الخادم إذا لم تصل تلقائياً
+    const dataRequestTimeout = setTimeout(() => {
+      if (socketService.isConnected()) {
+        console.log('🔄 طلب البيانات من الخادم (timeout fallback)')
+        socketService.getBookings()
+      }
+    }, 2000)
     
     // التحقق من وجود حجز محدد للانتقال إليه
     const highlightBooking = sessionStorage.getItem('highlightBooking')
@@ -51,43 +60,67 @@ export default function BookingsPage() {
     
     // إعداد مستمعي Socket.IO للتزامن الفوري
     socketService.on('bookings-updated', (data: any) => {
-      console.log('📅 تم تحديث جميع الحجوزات عبر Socket:', Object.keys(data.bookings || {}).length, 'حجز')
+      console.log('📅 تحديث شامل للحجوزات من الخادم:', Object.keys(data.bookings || {}).length, 'حجز')
       const newBookings = data.bookings || {}
       setBookings(newBookings)
-      // تحديث localStorage كنسخة احتياطية
-      localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
+      // حفظ نسخة احتياطية في localStorage
+      try {
+        localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
+        console.log('💾 تم حفظ البيانات في localStorage')
+      } catch (error) {
+        console.error('خطأ في حفظ localStorage:', error)
+      }
     })
     
     socketService.on('booking-created', (data: any) => {
-      console.log('✅ تم إنشاء حجز جديد عبر Socket:', data.key, '|', data.booking.teacher)
+      console.log('✅ حجز جديد من جهاز آخر:', data.key, '|', data.booking.teacher)
       setBookings(prev => {
         const updated = { ...prev, [data.key]: data.booking }
-        localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
+        // حفظ في localStorage فقط عند النجاح
+        try {
+          localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
+        } catch (error) {
+          console.error('خطأ في حفظ localStorage:', error)
+        }
         return updated
       })
     })
     
     socketService.on('booking-updated', (data: any) => {
-      console.log('📝 تم تحديث حجز عبر Socket:', data.key, '|', data.booking.teacher)
+      console.log('📝 تحديث حجز من جهاز آخر:', data.key, '|', data.booking.teacher)
       setBookings(prev => {
         const updated = { ...prev, [data.key]: data.booking }
-        localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
+        try {
+          localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
+        } catch (error) {
+          console.error('خطأ في حفظ localStorage:', error)
+        }
         return updated
       })
     })
     
     socketService.on('booking-deleted', (data: any) => {
-      console.log('🗑️ تم حذف حجز عبر Socket:', data.referenceNumber)
+      console.log('�fe0f حذف حجز من جهاز آخر:', data.referenceNumber)
       setBookings(prev => {
         const updated = { ...prev }
         // البحث عن الحجز بالرقم المرجعي وحذفه
+        let deleted = false
         for (const [key, booking] of Object.entries(updated)) {
           if ((booking as any).referenceNumber === data.referenceNumber) {
             delete updated[key]
+            deleted = true
+            console.log('🗭eef تم حذف الحجز:', key)
             break
           }
         }
-        localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
+        if (!deleted) {
+          console.warn('⚠️ لم يتم العثور على الحجز:', data.referenceNumber)
+        }
+        try {
+          localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
+        } catch (error) {
+          console.error('خطأ في حفظ localStorage:', error)
+        }
         return updated
       })
     })
@@ -103,26 +136,42 @@ export default function BookingsPage() {
       console.log('✅ تأكيد نجاح الحجز:', data.key)
     })
     
-    // طلب البيانات الحالية من الخادم
-    socketService.getBookings()
+    // إضافة مستمع للاتصال الناجح - فقط هنا نطلب البيانات
+    socketService.on('connect', () => {
+      console.log('🔗 متصل - طلب البيانات الحالية من الخادم')
+      socketService.getBookings()
+    })
+    
+    // طلب البيانات إذا كنا متصلين بالفعل
+    if (socketService.isConnected()) {
+      console.log('🔗 متصل بالفعل - طلب البيانات')
+      socketService.getBookings()
+    } else {
+      console.log('❌ غير متصل - سيتم طلب البيانات عند الاتصال')
+    }
     
     return () => {
+      // تنظيف التايم أوت
+      clearTimeout(dataRequestTimeout)
+      
       // تنظيف المستمعين عند إلغاء التحميل
       socketService.off('bookings-updated')
       socketService.off('booking-created')
       socketService.off('booking-updated')
       socketService.off('booking-deleted')
+      socketService.off('booking-error')
+      socketService.off('booking-success')
     }
   }, [])
   
-  // دالة تحميل البيانات من localStorage (نسخة احتياطية)
+  // دالة تحميل البيانات من localStorage (نسخة احتياطية فقط عند بداية التحميل)
   const loadBookingsFromStorage = () => {
     if (typeof window !== 'undefined') {
       const savedBookings = localStorage.getItem('zawiyah-bookings')
       if (savedBookings) {
         try {
           const bookingsData = JSON.parse(savedBookings)
-          console.log('📂 تحميل البيانات المحفوظة محلياً:', Object.keys(bookingsData).length, 'حجز')
+          console.log('📂 تحميل مؤقت من localStorage:', Object.keys(bookingsData).length, 'حجز (سيتم استبداله ببيانات الخادم)')
           setBookings(bookingsData)
         } catch (error) {
           console.error('خطأ في تحليل البيانات المحفوظة:', error)

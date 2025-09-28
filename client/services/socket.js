@@ -37,8 +37,8 @@ class SocketService {
     // إعداد المستمعين الأساسيين
     this.socket.on('connect', () => {
       console.log('🔗 متصل بخادم زاوية 2025 -', serverPath);
-      // طلب البيانات الحالية عند الاتصال
-      this.getBookings();
+      // إشعار المستمعين بالاتصال (سيطلبون البيانات حسب الحاجة)
+      this.notifyListeners('connect', { connected: true });
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -51,7 +51,8 @@ class SocketService {
 
     this.socket.on('reconnect', (attemptNumber) => {
       console.log('🔄 تم إعادة الاتصال بالخادم - المحاولة:', attemptNumber);
-      this.getBookings();
+      // إشعار المستمعين بإعادة الاتصال
+      this.notifyListeners('reconnect', { attemptNumber });
     });
 
     // مستمعي البيانات الرئيسيين
