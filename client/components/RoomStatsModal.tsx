@@ -171,72 +171,118 @@ export default function RoomStatsModal({ isOpen, onClose, roomName, bookings }: 
       
       const pdf = new jsPDF('p', 'mm', 'a4')
       
-      // إضافة العنوان باللغة العربية
+      // إنشاء تقرير بنسق يدعم العربية عبر استخدام نص باللاتينية مع ترجمة المحتوى
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(18)
-      pdf.text(`احصائيات القاعة: ${roomName}`, 105, 20, { align: 'center' })
+      pdf.text('Zawiyah 2025 - Room Statistics Report', 105, 20, { align: 'center' })
+      
+      // إضافة اسم القاعة
+      pdf.setFontSize(14)
+      const roomNameEn = roomName === 'القاعة الذكية' ? 'Smart Classroom' : 
+                        roomName === 'ساحة الطابور القديم' ? 'Old Assembly Area' :
+                        roomName === 'قاعة المصادر' ? 'Resource Center' : roomName
+      pdf.text(`Room: ${roomNameEn}`, 105, 35, { align: 'center' })
       
       // إضافة التاريخ
-      const today = new Date().toLocaleDateString('ar-SA')
+      const today = new Date()
+      const todayFormatted = today.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(10)
-      pdf.text(`تاريخ الانشاء: ${today}`, 105, 30, { align: 'center' })
+      pdf.text(`Report Generated on: ${todayFormatted}`, 105, 45, { align: 'center' })
       
       // إضافة خط فاصل
-      pdf.line(20, 35, 190, 35)
+      pdf.line(20, 55, 190, 55)
       
       // إضافة الإحصائيات العامة
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(14)
-      pdf.text('الاحصائيات العامة:', 20, 50)
+      pdf.text('STATISTICAL SUMMARY', 20, 70)
       
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(11)
-      let yPos = 65
+      let yPos = 85
       
       const statsData = [
-        { label: 'إجمالي الحجوزات', value: stats.totalBookings },
-        { label: 'عدد المعلمات', value: stats.uniqueTeachers },
-        { label: 'عدد المواد', value: stats.uniqueSubjects },
-        { label: 'أكثر الأيام نشاطاً', value: stats.mostActiveDay },
-        { label: 'معدل الاستخدام', value: `${stats.utilizationRate}%` }
+        { label: 'Total Number of Bookings', value: `${stats.totalBookings} bookings` },
+        { label: 'Number of Different Teachers', value: `${stats.uniqueTeachers} teachers` },
+        { label: 'Number of Different Subjects', value: `${stats.uniqueSubjects} subjects` },
+        { label: 'Most Active Day of Week', value: translateDay(stats.mostActiveDay) || 'Not Available' },
+        { label: 'Room Utilization Rate', value: `${stats.utilizationRate}%` }
       ]
       
       statsData.forEach(stat => {
-        pdf.text(`• ${stat.label}: ${stat.value}`, 25, yPos)
-        yPos += 10
+        pdf.text(`${stat.label}: ${stat.value}`, 25, yPos)
+        yPos += 12
       })
       
-      // إضافة معلومات إضافية
-      yPos += 15
+      // إضافة معلومات المدرسة
+      yPos += 20
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(14)
-      pdf.text('معلومات القاعة:', 20, yPos)
+      pdf.text('SCHOOL INFORMATION', 20, yPos)
       
       yPos += 15
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(11)
-      pdf.text(`• اسم القاعة: ${roomName}`, 25, yPos)
+      pdf.text(`School Name: Basayya Basic Education School`, 25, yPos)
+      yPos += 12
+      pdf.text(`System: Zawiyah 2025 - Classroom Booking System`, 25, yPos)
+      yPos += 12
+      pdf.text(`Location: Sultanate of Oman`, 25, yPos)
+      yPos += 12
+      pdf.text(`Academic Year: 2024-2025`, 25, yPos)
+      
+      // إضافة ملاحظات
+      yPos += 20
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(12)
+      pdf.text('NOTES', 20, yPos)
+      
+      yPos += 15
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(10)
+      pdf.text('• This report includes all booking data recorded in the system', 25, yPos)
       yPos += 10
-      pdf.text(`• تاريخ التقرير: ${today}`, 25, yPos)
+      pdf.text('• Statistics are calculated based on current data at time of export', 25, yPos)
       yPos += 10
-      pdf.text('• النظام: زاوية 2025 - نظام حجوزات القاعات', 25, yPos)
+      pdf.text('• For Arabic interface and detailed analysis, please use the web system', 25, yPos)
+      yPos += 10
+      pdf.text('• Report generated automatically by Zawiyah 2025 system', 25, yPos)
       
       // إضافة footer
       pdf.setFontSize(8)
-      pdf.text('مدرسة البصائر للتعليم الأساسي', 105, 280, { align: 'center' })
+      pdf.text('Basayya Basic Education School | Zawiyah 2025 System', 105, 280, { align: 'center' })
+      pdf.text(`Generated: ${new Date().toLocaleString('en-US')}`, 105, 285, { align: 'center' })
       
       // حفظ الملف
-      const fileName = `${roomName.replace(/\s+/g, '-')}-statistics-${today.replace(/\//g, '-')}.pdf`
+      const fileName = `${roomNameEn.replace(/\s+/g, '-')}-Report-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}.pdf`
       pdf.save(fileName)
       
       console.log('تم إنشاء PDF بنجاح')
-      alert('تم تصدير التقرير بنجاح!')
+      alert('تم تصدير التقرير بنجاح! The report has been exported successfully!')
       
     } catch (error) {
       console.error('خطأ في تصدير PDF:', error)
       alert(`حدث خطأ في تصدير التقرير: ${error.message || 'خطأ غير محدد'}`)
     }
+  }
+
+  // دالة مساعدة لترجمة أسماء الأيام
+  const translateDay = (arabicDay: string) => {
+    const dayTranslations: Record<string, string> = {
+      'الأحد': 'Sunday',
+      'الإثنين': 'Monday', 
+      'الثلاثاء': 'Tuesday',
+      'الأربعاء': 'Wednesday',
+      'الخميس': 'Thursday',
+      'الجمعة': 'Friday',
+      'السبت': 'Saturday'
+    }
+    return dayTranslations[arabicDay] || arabicDay
   }
 
   if (!isOpen || !stats) return null
