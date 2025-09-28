@@ -228,7 +228,7 @@ export default function RoomStatsModal({ isOpen, onClose, roomName, bookings }: 
       yPos += 15
       pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(11)
-      pdf.text(`School Name: Basayya Basic Education School`, 25, yPos)
+      pdf.text(`School Name: Busayyah Basic Education School (5-12)`, 25, yPos)
       yPos += 12
       pdf.text(`System: Zawiyah 2025 - Classroom Booking System`, 25, yPos)
       yPos += 12
@@ -255,7 +255,7 @@ export default function RoomStatsModal({ isOpen, onClose, roomName, bookings }: 
       
       // إضافة footer
       pdf.setFontSize(8)
-      pdf.text('Basayya Basic Education School | Zawiyah 2025 System', 105, 280, { align: 'center' })
+      pdf.text('Busayyah Basic Education School (5-12) | Zawiyah 2025 System', 105, 280, { align: 'center' })
       pdf.text(`Generated: ${new Date().toLocaleString('en-US')}`, 105, 285, { align: 'center' })
       
       // حفظ الملف

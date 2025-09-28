@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Navigation from '../components/layout/Navigation'
 import Footer from '../components/layout/Footer'
 import LiveClock from '../components/LiveClock'
@@ -33,6 +34,7 @@ interface BookingItem {
 }
 
 export default function Home() {
+  const router = useRouter()
   const [recentBookings, setRecentBookings] = useState<BookingItem[]>([])
   const [assemblyBookings, setAssemblyBookings] = useState<BookingItem[]>([])
   const [todayCount, setTodayCount] = useState(0)
@@ -125,6 +127,20 @@ export default function Home() {
     return date.toLocaleDateString('ar-SA')
   }
 
+  // وظيفة الانتقال لصفحة الحجوزات مع التمرير للحجز المحدد
+  const navigateToBooking = (booking: BookingItem['booking']) => {
+    // حفظ معلومات الحجز في sessionStorage للعثور عليه
+    sessionStorage.setItem('highlightBooking', JSON.stringify({
+      room: booking.room,
+      day: booking.day,
+      period: booking.period,
+      teacher: booking.teacher
+    }))
+    
+    // الانتقال لصفحة الحجوزات
+    router.push('/bookings')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -147,7 +163,7 @@ export default function Home() {
             🏫 زاوية 2025
           </h1>
           <p className="text-xl text-gray-700 font-cairo mb-6">
-            مدرسة البصائر للتعليم الأساسي - نظام حجز القاعات الدراسية
+            مدرسة بسياء للتعليم الأساسي (5-12) - نظام حجز القاعات الدراسية
           </p>
           <LiveClock />
         </div>
@@ -229,7 +245,12 @@ export default function Home() {
             {recentBookings.length > 0 ? (
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {recentBookings.map((item) => (
-                  <div key={item.key} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div 
+                    key={item.key} 
+                    className="border border-gray-200 rounded-lg p-4 hover:bg-blue-50 hover:border-blue-300 transition-all cursor-pointer transform hover:scale-[1.02]"
+                    onClick={() => navigateToBooking(item.booking)}
+                    title="انقر للانتقال إلى موقع الحجز في صفحة الحجوزات"
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
                         <div className="flex items-center mb-1">
@@ -251,11 +272,16 @@ export default function Home() {
                         <div className="text-xs text-gray-400 font-cairo">{formatTime(item.booking.createdAt)}</div>
                       </div>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <FaPhoneAlt className="text-gray-400 ml-2 text-xs" />
-                      <span className="text-gray-500 font-cairo">{item.booking.phone}</span>
-                      <span className="mx-2 text-gray-300">|</span>
-                      <span className="text-gray-500 font-cairo">{item.booking.grade} - {item.booking.section}</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center">
+                        <FaPhoneAlt className="text-gray-400 ml-2 text-xs" />
+                        <span className="text-gray-500 font-cairo">{item.booking.phone}</span>
+                        <span className="mx-2 text-gray-300">|</span>
+                        <span className="text-gray-500 font-cairo">{item.booking.grade} - {item.booking.section}</span>
+                      </div>
+                      <div className="text-xs text-blue-500 font-cairo opacity-0 group-hover:opacity-100 transition-opacity">
+                        انقر للعرض →
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -283,7 +309,12 @@ export default function Home() {
             {assemblyBookings.length > 0 ? (
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {assemblyBookings.map((item) => (
-                  <div key={item.key} className="border border-purple-200 rounded-lg p-4 bg-purple-50 hover:bg-purple-100 transition-colors">
+                  <div 
+                    key={item.key} 
+                    className="border border-purple-200 rounded-lg p-4 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all cursor-pointer transform hover:scale-[1.02]"
+                    onClick={() => navigateToBooking(item.booking)}
+                    title="انقر للانتقال إلى موقع الحجز في صفحة الحجوزات"
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
                         <div className="flex items-center mb-1">
@@ -304,11 +335,16 @@ export default function Home() {
                         <div className="text-xs text-purple-500 font-cairo">{formatTime(item.booking.createdAt)}</div>
                       </div>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <FaPhoneAlt className="text-purple-500 ml-2 text-xs" />
-                      <span className="text-purple-600 font-cairo">{item.booking.phone}</span>
-                      <span className="mx-2 text-purple-300">|</span>
-                      <span className="text-purple-600 font-cairo">{item.booking.grade} - {item.booking.section}</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center">
+                        <FaPhoneAlt className="text-purple-500 ml-2 text-xs" />
+                        <span className="text-purple-600 font-cairo">{item.booking.phone}</span>
+                        <span className="mx-2 text-purple-300">|</span>
+                        <span className="text-purple-600 font-cairo">{item.booking.grade} - {item.booking.section}</span>
+                      </div>
+                      <div className="text-xs text-purple-600 font-cairo opacity-0 group-hover:opacity-100 transition-opacity">
+                        انقر للعرض →
+                      </div>
                     </div>
                   </div>
                 ))}

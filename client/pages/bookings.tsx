@@ -29,6 +29,26 @@ export default function BookingsPage() {
     // تحميل البيانات من localStorage كنسخة احتياطية
     loadBookingsFromStorage()
     
+    // التحقق من وجود حجز محدد للانتقال إليه
+    const highlightBooking = sessionStorage.getItem('highlightBooking')
+    if (highlightBooking) {
+      try {
+        const bookingInfo = JSON.parse(highlightBooking)
+        // تحديد القاعة المطلوبة
+        setSelectedRoom(bookingInfo.room)
+        
+        // حذف المعلومات المحفوظة بعد الاستخدام
+        sessionStorage.removeItem('highlightBooking')
+        
+        // إضافة تأخير للسماح بتحميل البيانات ثم التمرير
+        setTimeout(() => {
+          highlightBookingSlot(bookingInfo)
+        }, 1000)
+      } catch (error) {
+        console.error('خطأ في تحليل معلومات الحجز:', error)
+      }
+    }
+    
     // إعداد مستمعي Socket.IO للتزامن الفوري
     socketService.on('bookings-updated', (data: any) => {
       console.log('📅 تم تحديث الحجوزات عبر Socket:', data)
@@ -91,6 +111,25 @@ export default function BookingsPage() {
           console.error('خطأ في تحميل البيانات من localStorage:', error)
         }
       }
+    }
+  }
+
+  // دالة للتمرير وإبراز الحجز المحدد
+  const highlightBookingSlot = (bookingInfo: any) => {
+    // البحث عن الخانة المطلوبة وإبرازها
+    const slotElement = document.querySelector(`[data-day="${bookingInfo.day}"][data-period="${bookingInfo.period}"]`)
+    if (slotElement) {
+      // التمرير للعنصر
+      slotElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      })
+      
+      // إضافة تأثير إبراز مؤقت
+      slotElement.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-75')
+      setTimeout(() => {
+        slotElement.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-75')
+      }, 3000)
     }
   }
   const [formData, setFormData] = useState({
@@ -739,7 +778,9 @@ export default function BookingsPage() {
                         
                         return (
                           <td 
-                            key={`${day.name}-${period}`} 
+                            key={`${day.name}-${period}`}
+                            data-day={day.name}
+                            data-period={period}
                             className={`border border-gray-300 p-2 text-center transition-colors ${
                               isPastDate 
                                 ? 'bg-gray-100 cursor-not-allowed opacity-60' 
