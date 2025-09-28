@@ -23,7 +23,6 @@ import {
   Cell
 } from 'recharts';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface RoomStatsModalProps {
   isOpen: boolean
@@ -162,48 +161,81 @@ export default function RoomStatsModal({ isOpen, onClose, roomName, bookings }: 
   }
 
   const exportToPDF = async () => {
-    if (!chartRef.current || !stats) return
+    if (!stats) {
+      alert('لا توجد بيانات إحصائية للتصدير')
+      return
+    }
 
     try {
-      const canvas = await html2canvas(chartRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true
-      })
-
-      const imgData = canvas.toDataURL('image/png')
+      console.log('بدء تصدير PDF...')
+      
       const pdf = new jsPDF('p', 'mm', 'a4')
       
-      // إضافة العنوان
+      // إضافة العنوان باللغة العربية
       pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(20)
-      pdf.text(`Room Statistics: ${roomName}`, 20, 20)
+      pdf.setFontSize(18)
+      pdf.text(`احصائيات القاعة: ${roomName}`, 105, 20, { align: 'center' })
       
       // إضافة التاريخ
       const today = new Date().toLocaleDateString('ar-SA')
-      pdf.setFontSize(12)
-      pdf.text(`Generated on: ${today}`, 20, 35)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(10)
+      pdf.text(`تاريخ الانشاء: ${today}`, 105, 30, { align: 'center' })
+      
+      // إضافة خط فاصل
+      pdf.line(20, 35, 190, 35)
       
       // إضافة الإحصائيات العامة
+      pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(14)
-      pdf.text('General Statistics:', 20, 50)
-      pdf.setFontSize(10)
-      pdf.text(`Total Bookings: ${stats.totalBookings}`, 25, 60)
-      pdf.text(`Unique Teachers: ${stats.uniqueTeachers}`, 25, 70)
-      pdf.text(`Unique Subjects: ${stats.uniqueSubjects}`, 25, 80)
-      pdf.text(`Most Active Day: ${stats.mostActiveDay}`, 25, 90)
-      pdf.text(`Utilization Rate: ${stats.utilizationRate}%`, 25, 100)
+      pdf.text('الاحصائيات العامة:', 20, 50)
       
-      // إضافة الرسم البياني
-      const imgWidth = 170
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      pdf.addImage(imgData, 'PNG', 20, 110, imgWidth, imgHeight)
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(11)
+      let yPos = 65
+      
+      const statsData = [
+        { label: 'إجمالي الحجوزات', value: stats.totalBookings },
+        { label: 'عدد المعلمات', value: stats.uniqueTeachers },
+        { label: 'عدد المواد', value: stats.uniqueSubjects },
+        { label: 'أكثر الأيام نشاطاً', value: stats.mostActiveDay },
+        { label: 'معدل الاستخدام', value: `${stats.utilizationRate}%` }
+      ]
+      
+      statsData.forEach(stat => {
+        pdf.text(`• ${stat.label}: ${stat.value}`, 25, yPos)
+        yPos += 10
+      })
+      
+      // إضافة معلومات إضافية
+      yPos += 15
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(14)
+      pdf.text('معلومات القاعة:', 20, yPos)
+      
+      yPos += 15
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(11)
+      pdf.text(`• اسم القاعة: ${roomName}`, 25, yPos)
+      yPos += 10
+      pdf.text(`• تاريخ التقرير: ${today}`, 25, yPos)
+      yPos += 10
+      pdf.text('• النظام: زاوية 2025 - نظام حجوزات القاعات', 25, yPos)
+      
+      // إضافة footer
+      pdf.setFontSize(8)
+      pdf.text('مدرسة البصائر للتعليم الأساسي', 105, 280, { align: 'center' })
       
       // حفظ الملف
-      pdf.save(`${roomName}-statistics-${today}.pdf`)
+      const fileName = `${roomName.replace(/\s+/g, '-')}-statistics-${today.replace(/\//g, '-')}.pdf`
+      pdf.save(fileName)
+      
+      console.log('تم إنشاء PDF بنجاح')
+      alert('تم تصدير التقرير بنجاح!')
+      
     } catch (error) {
       console.error('خطأ في تصدير PDF:', error)
-      alert('حدث خطأ في تصدير التقرير')
+      alert(`حدث خطأ في تصدير التقرير: ${error.message || 'خطأ غير محدد'}`)
     }
   }
 
