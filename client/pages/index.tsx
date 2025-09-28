@@ -7,8 +7,11 @@ import {
   FaCalendarCheck, 
   FaDoorOpen, 
   FaUsers, 
-  FaChartLine,
-  FaArrowRight 
+  FaFlag,
+  FaArrowRight,
+  FaClock,
+  FaPhoneAlt,
+  FaBook
 } from 'react-icons/fa'
 import Link from 'next/link'
 
@@ -29,452 +32,297 @@ interface BookingItem {
   }
 }
 
-interface DashboardStats {
-  todayBookings: number
-  weekBookings: number  
-  monthBookings: number
-  totalClassrooms: number
-  mostBookedClassrooms: Array<{
-    classroomName: string
-    bookingCount: number
-  }>
-  mostActiveTeachers: Array<{
-    teacherName: string
-    bookingCount: number
-  }>
-  todayBookingsList: BookingItem[]
-  assemblyBookings: BookingItem[]
-}
-
 export default function Home() {
-  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentBookings, setRecentBookings] = useState<BookingItem[]>([])
+  const [assemblyBookings, setAssemblyBookings] = useState<BookingItem[]>([])
+  const [todayCount, setTodayCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Fetch dashboard stats
-    fetchStats()
+    fetchData()
+    
+    // الاتصال بالخادم
+    socketService.connect()
+    
+    // تحديث البيانات عند تحديث الحجوزات
+    socketService.on('bookings-updated', () => {
+      setTimeout(fetchData, 500) // انتظار قليل للتأكد من تحديث localStorage
+    })
+    
+    socketService.on('booking-created', () => {
+      setTimeout(fetchData, 500)
+    })
+    
+    socketService.on('booking-deleted', () => {
+      setTimeout(fetchData, 500)
+    })
+    
+    // تحديث دوري كل 30 ثانية
+    const interval = setInterval(fetchData, 30000)
+    
+    return () => {
+      clearInterval(interval)
+      socketService.disconnect()
+    }
   }, [])
 
-  const fetchStats = async () => {
+  const fetchData = () => {
     try {
-      // جلب بيانات الحجوزات من localStorage (للتزامن مع صفحة الحجوزات)
+      // جلب بيانات الحجوزات من localStorage
       const bookingsData = localStorage.getItem('zawiyah-bookings')
       const bookings = bookingsData ? JSON.parse(bookingsData) : {}
       
       const today = new Date()
-      const todayString = today.toLocaleDateString('ar-SA')
       const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
       const todayName = dayNames[today.getDay()]
       
       const allBookings = Object.entries(bookings).map(([key, booking]: [string, any]) => ({ 
         key, 
-        booking: booking as {
-          teacher: string
-          phone: string
-          room: string
-          day: string
-          period: string
-          subject: string
-          grade: string
-          section: string
-          referenceNumber: string
-          createdAt: string
-          notes?: string
-        }
+        booking: booking as BookingItem['booking']
       }))
       
-      // حجوزات اليوم
-      const todayBookings = allBookings.filter(item => {
+      // ترتيب الحجوزات من الأحدث إلى الأقدم
+      const sortedBookings = allBookings.sort((a, b) => {
+        const dateA = new Date(a.booking.createdAt)
+        const dateB = new Date(b.booking.createdAt)
+        return dateB.getTime() - dateA.getTime()
+      })
+      
+      // أحدث 8 حجوزات
+      const recent = sortedBookings.slice(0, 8)
+      setRecentBookings(recent)
+      
+      // حجوزات فترة الطابور لليوم
+      const assembly = sortedBookings.filter(item => 
+        item.booking.period === 'الطابور' && item.booking.day === todayName
+      )
+      setAssemblyBookings(assembly)
+      
+      // عدد حجوزات اليوم
+      const todayBookings = sortedBookings.filter(item => {
         const bookingDate = new Date(item.booking.createdAt)
         return bookingDate.toDateString() === today.toDateString() || item.booking.day === todayName
       })
-      
-      // حجوزات فترة الطابور ليوم اليوم
-      const assemblyBookings = allBookings.filter(item => 
-        item.booking.period === 'الطابور' && item.booking.day === todayName
-      )
-      
-      // إحصائيات أخرى
-      const weekBookings = allBookings.filter(item => {
-        const bookingDate = new Date(item.booking.createdAt)
-        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-        return bookingDate >= weekAgo
-      })
-      
-      const monthBookings = allBookings.filter(item => {
-        const bookingDate = new Date(item.booking.createdAt)
-        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
-        return bookingDate >= monthAgo
-      })
-      
-      // أكثر القاعات حجزاً
-      const roomCounts: Record<string, number> = {}
-      allBookings.forEach(item => {
-        const room = item.booking.room
-        roomCounts[room] = (roomCounts[room] || 0) + 1
-      })
-      
-      const mostBookedClassrooms = Object.entries(roomCounts)
-        .map(([room, count]) => ({ classroomName: room, bookingCount: count }))
-        .sort((a, b) => b.bookingCount - a.bookingCount)
-      
-      // أكثر المعلمين نشاطاً
-      const teacherCounts: Record<string, number> = {}
-      allBookings.forEach(item => {
-        const teacher = item.booking.teacher
-        teacherCounts[teacher] = (teacherCounts[teacher] || 0) + 1
-      })
-      
-      const mostActiveTeachers = Object.entries(teacherCounts)
-        .map(([teacher, count]) => ({ teacherName: teacher, bookingCount: count }))
-        .sort((a, b) => b.bookingCount - a.bookingCount)
-      
-      setStats({
-        todayBookings: todayBookings.length,
-        weekBookings: weekBookings.length,
-        monthBookings: monthBookings.length,
-        totalClassrooms: 23, // عدد القاعات المتاحة
-        mostBookedClassrooms,
-        mostActiveTeachers,
-        todayBookingsList: todayBookings,
-        assemblyBookings
-      })
+      setTodayCount(todayBookings.length)
       
     } catch (error) {
-      console.error('خطأ في جلب الإحصائيات:', error)
+      console.error('خطأ في جلب البيانات:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchStats()
-    
-    // الاتصال بالخادم
-    socketService.connect()
-    
-    // إعداد مستمعي Socket.IO للتحديث الفوري
-    socketService.on('bookings-updated', () => {
-      fetchStats()
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('ar-SA', { 
+      hour: '2-digit', 
+      minute: '2-digit'
     })
-    
-    socketService.on('booking-created', () => {
-      fetchStats()
-    })
-    
-    socketService.on('booking-updated', () => {
-      fetchStats()
-    })
-    
-    socketService.on('booking-deleted', () => {
-      fetchStats()
-    })
-    
-    // تحديث البيانات كل 30 ثانية كنسخة احتياطية
-    const interval = setInterval(fetchStats, 30000)
-    
-    // تحديث البيانات عند تغيير localStorage (نسخة احتياطية)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'zawiyah-bookings') {
-        fetchStats()
-      }
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    
-    // تحديث البيانات عند التركيز على النافذة
-    const handleFocus = () => {
-      fetchStats()
-    }
-    
-    window.addEventListener('focus', handleFocus)
-    
-    return () => {
-      clearInterval(interval)
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('focus', handleFocus)
-      
-      // تنظيف مستمعي Socket.IO
-      socketService.off('bookings-updated')
-      socketService.off('booking-created')
-      socketService.off('booking-updated') 
-      socketService.off('booking-deleted')
-    }
-  }, [])
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ar-SA')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-cairo">جاري التحميل...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 rtl">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Header Section */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            مرحباً بك في منصة زاوية لحجز القاعات الدراسية
+          <h1 className="text-4xl font-bold text-indigo-900 font-cairo mb-4">
+            🏫 زاوية 2025
           </h1>
-          <div className="max-w-4xl mx-auto">
-            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              يهدف الموقع إلى تسهيل عملية حجز القاعات وإدارتها إلكترونياً في مدرسة بسياء للتعليم الأساسي (5-12) 
-              مع توفير تجربة سهلة لجميع المستخدمين في بيئة تعليمية متكاملة
-            </p>
-          </div>
-          
-          {/* Live Date and Time */}
+          <p className="text-xl text-gray-700 font-cairo mb-6">
+            مدرسة البصائر للتعليم الأساسي - نظام حجز القاعات الدراسية
+          </p>
           <LiveClock />
         </div>
 
-        {/* Quick Stats Cards */}
-        {loading ? (
-          <div className="flex justify-center items-center h-48">
-            <div className="loading-spinner"></div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 font-cairo font-semibold">حجوزات اليوم</p>
+                <p className="text-3xl font-bold text-blue-800">{todayCount}</p>
+              </div>
+              <FaCalendarCheck className="text-4xl text-blue-500" />
+            </div>
           </div>
-        ) : stats ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm">حجوزات اليوم</p>
-                    <p className="text-3xl font-bold">{stats.todayBookings}</p>
-                  </div>
-                  <FaCalendarCheck className="text-4xl text-blue-200" />
-                </div>
-              </div>
 
-              <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm">حجوزات الأسبوع</p>
-                    <p className="text-3xl font-bold">{stats.weekBookings}</p>
-                  </div>
-                  <FaChartLine className="text-4xl text-green-200" />
-                </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-600 font-cairo font-semibold">القاعات المتاحة</p>
+                <p className="text-3xl font-bold text-green-800">23</p>
               </div>
+              <FaDoorOpen className="text-4xl text-green-500" />
+            </div>
+          </div>
 
-              <div className="card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-sm">حجوزات الشهر</p>
-                    <p className="text-3xl font-bold">{stats.monthBookings}</p>
-                  </div>
-                  <FaUsers className="text-4xl text-purple-200" />
-                </div>
+          <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-600 font-cairo font-semibold">فترة الطابور</p>
+                <p className="text-3xl font-bold text-purple-800">{assemblyBookings.length}</p>
               </div>
+              <FaFlag className="text-4xl text-purple-500" />
+            </div>
+          </div>
+        </div>
 
-              <div className="card bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-sm">إجمالي القاعات</p>
-                    <p className="text-3xl font-bold">{stats.totalClassrooms}</p>
-                  </div>
-                  <FaDoorOpen className="text-4xl text-orange-200" />
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Link href="/bookings" className="block">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold font-cairo mb-2">📅 حجز قاعة</h3>
+                  <p className="font-cairo opacity-90">احجز قاعة دراسية الآن</p>
                 </div>
+                <FaArrowRight className="text-3xl" />
               </div>
             </div>
+          </Link>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Link href="/bookings" className="block">
-                <div className="card hover:shadow-medium transition-shadow duration-200 cursor-pointer">
-                  <div className="text-center">
-                    <FaCalendarCheck className="text-4xl text-primary-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      إنشاء حجز جديد
-                    </h3>
-                    <p className="text-gray-600">
-                      احجز قاعة دراسية لحصصك القادمة
-                    </p>
-                    <div className="mt-4 flex items-center justify-center text-primary-600">
-                      <span className="ml-2">ابدأ الحجز</span>
-                      <FaArrowRight />
-                    </div>
-                  </div>
+          <Link href="/rooms" className="block">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold font-cairo mb-2">🏫 إدارة القاعات</h3>
+                  <p className="font-cairo opacity-90">عرض وإدارة القاعات</p>
                 </div>
-              </Link>
-
-              <Link href="/rooms" className="block">
-                <div className="card hover:shadow-medium transition-shadow duration-200 cursor-pointer">
-                  <div className="text-center">
-                    <FaDoorOpen className="text-4xl text-green-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      إدارة القاعات
-                    </h3>
-                    <p className="text-gray-600">
-                      تصفح واستعرض جميع القاعات المتاحة
-                    </p>
-                    <div className="mt-4 flex items-center justify-center text-green-600">
-                      <span className="ml-2">عرض القاعات</span>
-                      <FaArrowRight />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-
-              <Link href="/stats" className="block">
-                <div className="card hover:shadow-medium transition-shadow duration-200 cursor-pointer">
-                  <div className="text-center">
-                    <FaChartLine className="text-4xl text-purple-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      الإحصائيات والتقارير
-                    </h3>
-                    <p className="text-gray-600">
-                      تقارير مفصلة عن استخدام القاعات
-                    </p>
-                    <div className="mt-4 flex items-center justify-center text-purple-600">
-                      <span className="ml-2">عرض التقارير</span>
-                      <FaArrowRight />
-                    </div>
-                  </div>
-                </div>
-              </Link>
+                <FaArrowRight className="text-3xl" />
+              </div>
             </div>
+          </Link>
+        </div>
 
-            {/* حجوزات اليوم وفترة الطابور */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* حجوزات اليوم */}
-              <div className="card">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    📅 حجوزات اليوم
-                  </h3>
-                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    {stats.todayBookingsList.length} حجز
-                  </span>
-                </div>
-                {stats.todayBookingsList.length > 0 ? (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {stats.todayBookingsList.slice(0, 10).map((item, index) => (
-                      <div key={item.key} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-semibold text-blue-800">
-                            👨‍🏫 {item.booking.teacher}
-                          </div>
-                          <div className="text-xs text-blue-600 font-mono">
-                            {item.booking.referenceNumber}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-blue-700">
-                          <div>🏫 {item.booking.room}</div>
-                          <div>⏰ {item.booking.period}</div>
-                          <div>📚 {item.booking.subject}</div>
-                          <div>🎯 {item.booking.grade}-{item.booking.section}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-2">📅</div>
-                    <p className="text-gray-500">لا توجد حجوزات ليوم اليوم</p>
-                  </div>
-                )}
-              </div>
-              
-              {/* حجوزات فترة الطابور */}
-              <div className="card">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    🏺 فترة الطابور اليوم
-                  </h3>
-                  <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    {stats.assemblyBookings.length} حجز
-                  </span>
-                </div>
-                {stats.assemblyBookings.length > 0 ? (
-                  <div className="space-y-3">
-                    {stats.assemblyBookings.map((item, index) => (
-                      <div key={item.key} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-semibold text-orange-800">
-                            👨‍🏫 {item.booking.teacher}
-                          </div>
-                          <div className="text-xs text-orange-600 font-mono">
-                            {item.booking.referenceNumber}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-orange-700">
-                          <div>🏫 {item.booking.room}</div>
-                          <div>📚 {item.booking.subject}</div>
-                          <div>🎯 {item.booking.grade}-{item.booking.section}</div>
-                          <div>📱 {item.booking.phone}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-2">🏺</div>
-                    <p className="text-gray-500">لا توجد حجوزات لفترة الطابور اليوم</p>
-                  </div>
-                )}
-              </div>
+        {/* Recent Bookings Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Latest Bookings */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 font-cairo flex items-center">
+                <FaClock className="text-blue-500 ml-3" />
+                آخر الحجوزات
+              </h2>
+              <Link href="/bookings" className="text-blue-500 hover:text-blue-700 font-cairo">
+                عرض الكل
+              </Link>
             </div>
             
-            {/* Most Booked Classrooms & Active Teachers */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Most Booked Classrooms */}
-              <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  أكثر القاعات حجزاً
-                </h3>
-                {stats.mostBookedClassrooms?.length > 0 ? (
-                  <div className="space-y-3">
-                    {stats.mostBookedClassrooms.slice(0, 5).map((room, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center ml-3">
-                            <span className="text-primary-600 font-semibold">{index + 1}</span>
-                          </div>
-                          <span className="font-medium">{room.classroomName}</span>
+            {recentBookings.length > 0 ? (
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {recentBookings.map((item) => (
+                  <div key={item.key} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-1">
+                          <FaUsers className="text-blue-500 ml-2 text-sm" />
+                          <span className="font-semibold text-gray-800 font-cairo">{item.booking.teacher}</span>
                         </div>
-                        <span className="text-sm text-gray-500">
-                          {room.bookingCount} حجز
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    لا توجد بيانات متاحة
-                  </p>
-                )}
-              </div>
-
-              {/* Most Active Teachers */}
-              <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  أكثر المعلمات نشاطاً
-                </h3>
-                {stats.mostActiveTeachers?.length > 0 ? (
-                  <div className="space-y-3">
-                    {stats.mostActiveTeachers.slice(0, 5).map((teacher, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center ml-3">
-                            <span className="text-green-600 font-semibold">{index + 1}</span>
-                          </div>
-                          <span className="font-medium">{teacher.teacherName}</span>
+                        <div className="flex items-center mb-1">
+                          <FaDoorOpen className="text-green-500 ml-2 text-sm" />
+                          <span className="text-gray-600 font-cairo">{item.booking.room}</span>
                         </div>
-                        <span className="text-sm text-gray-500">
-                          {teacher.bookingCount} حجز
-                        </span>
+                        <div className="flex items-center">
+                          <FaBook className="text-purple-500 ml-2 text-sm" />
+                          <span className="text-gray-600 font-cairo">{item.booking.subject}</span>
+                        </div>
                       </div>
-                    ))}
+                      <div className="text-left">
+                        <div className="text-sm text-gray-500 font-cairo">{item.booking.day}</div>
+                        <div className="text-sm text-gray-500 font-cairo">{item.booking.period}</div>
+                        <div className="text-xs text-gray-400 font-cairo">{formatTime(item.booking.createdAt)}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <FaPhoneAlt className="text-gray-400 ml-2 text-xs" />
+                      <span className="text-gray-500 font-cairo">{item.booking.phone}</span>
+                      <span className="mx-2 text-gray-300">|</span>
+                      <span className="text-gray-500 font-cairo">{item.booking.grade} - {item.booking.section}</span>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    لا توجد بيانات متاحة
-                  </p>
-                )}
+                ))}
               </div>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500">حدث خطأ في تحميل البيانات</p>
+            ) : (
+              <div className="text-center py-8 text-gray-500 font-cairo">
+                <FaCalendarCheck className="text-4xl mx-auto mb-4 opacity-50" />
+                <p>لا توجد حجوزات حالياً</p>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Assembly Period Bookings */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 font-cairo flex items-center">
+                <FaFlag className="text-purple-500 ml-3" />
+                حجوزات فترة الطابور
+              </h2>
+              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-cairo">
+                اليوم
+              </span>
+            </div>
+            
+            {assemblyBookings.length > 0 ? (
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {assemblyBookings.map((item) => (
+                  <div key={item.key} className="border border-purple-200 rounded-lg p-4 bg-purple-50 hover:bg-purple-100 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-1">
+                          <FaUsers className="text-purple-600 ml-2 text-sm" />
+                          <span className="font-semibold text-purple-800 font-cairo">{item.booking.teacher}</span>
+                        </div>
+                        <div className="flex items-center mb-1">
+                          <FaDoorOpen className="text-purple-600 ml-2 text-sm" />
+                          <span className="text-purple-700 font-cairo">{item.booking.room}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <FaBook className="text-purple-600 ml-2 text-sm" />
+                          <span className="text-purple-700 font-cairo">{item.booking.subject}</span>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <div className="text-sm text-purple-600 font-cairo font-semibold">فترة الطابور</div>
+                        <div className="text-xs text-purple-500 font-cairo">{formatTime(item.booking.createdAt)}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <FaPhoneAlt className="text-purple-500 ml-2 text-xs" />
+                      <span className="text-purple-600 font-cairo">{item.booking.phone}</span>
+                      <span className="mx-2 text-purple-300">|</span>
+                      <span className="text-purple-600 font-cairo">{item.booking.grade} - {item.booking.section}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-purple-400 font-cairo">
+                <FaFlag className="text-4xl mx-auto mb-4 opacity-50" />
+                <p>لا توجد حجوزات لفترة الطابور اليوم</p>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   )

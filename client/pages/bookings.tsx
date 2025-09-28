@@ -327,14 +327,15 @@ export default function BookingsPage() {
     })
     
     // تحديث حالة المحلية أيضاً (نسخة احتياطية)
-    setBookings(prev => ({
-      ...prev,
-      [bookingKey]: newBooking
-    }))
-    
-    // حفظ في localStorage كنسخة احتياطية
-    const updatedBookings = { ...bookings, [bookingKey]: newBooking }
-    localStorage.setItem('zawiyah-bookings', JSON.stringify(updatedBookings))
+    setBookings(prev => {
+      const updatedBookings = {
+        ...prev,
+        [bookingKey]: newBooking
+      }
+      // حفظ في localStorage مع الحالة المحدثة
+      localStorage.setItem('zawiyah-bookings', JSON.stringify(updatedBookings))
+      return updatedBookings
+    })
     
     setConfirmationNumber(referenceNum)
     closeModal()
@@ -392,12 +393,13 @@ export default function BookingsPage() {
       socketService.deleteBooking(editingBooking.booking.referenceNumber)
       
       // حذف من الحالة المحلية أيضاً
-      const newBookings = { ...bookings }
-      delete newBookings[editingBooking.key]
-      setBookings(newBookings)
-      
-      // تحديث localStorage
-      localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
+      setBookings(prev => {
+        const newBookings = { ...prev }
+        delete newBookings[editingBooking.key]
+        // تحديث localStorage مع الحالة المحدثة
+        localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
+        return newBookings
+      })
       
       alert('تم حذف الحجز بنجاح')
       closeManageModal()
@@ -478,16 +480,24 @@ export default function BookingsPage() {
         socketService.deleteBooking(booking.referenceNumber)
       }
       
-      const newBookings = { ...bookings }
-      delete newBookings[bookingKey]
-      setBookings(newBookings)
-      
-      // تحديث localStorage
-      localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
-      
-      // تحديث القائمة
-      const updatedList = findTeacherBookings(teacherPhone)
-      setTeacherBookingsList(updatedList)
+      // حذف من الحالة المحلية
+      setBookings(prev => {
+        const newBookings = { ...prev }
+        delete newBookings[bookingKey]
+        // تحديث localStorage مع الحالة المحدثة
+        localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
+        
+        // تحديث القائمة مع البيانات الجديدة
+        const updatedList = []
+        for (const [key, booking] of Object.entries(newBookings)) {
+          if (booking.phone === teacherPhone) {
+            updatedList.push({ key, booking })
+          }
+        }
+        setTeacherBookingsList(updatedList)
+        
+        return newBookings
+      })
       alert('تم حذف الحجز بنجاح')
     }
   }
