@@ -72,16 +72,108 @@ export default function Rooms() {
         }
       }
       
-      const response = await fetch(`${serverUrl}/api/classrooms`)
-      const data = await response.json()
-      if (data.success) {
-        setClassrooms(data.data)
+      try {
+        const response = await fetch(`${serverUrl}/api/classrooms`)
+        const data = await response.json()
+        if (data.success) {
+          setClassrooms(data.data)
+        } else {
+          throw new Error('Failed to fetch from server')
+        }
+      } catch (serverError) {
+        // استخدام البيانات الافتراضية عند فشل الاتصال بالخادم
+        console.log('استخدام البيانات الافتراضية للقاعات')
+        setClassrooms(getDefaultClassrooms())
       }
     } catch (error) {
       console.error('خطأ في جلب القاعات:', error)
+      // استخدام البيانات الافتراضية كحل احتياطي
+      setClassrooms(getDefaultClassrooms())
     } finally {
       setLoading(false)
     }
+  }
+
+  // البيانات الافتراضية للقاعات
+  const getDefaultClassrooms = (): Classroom[] => {
+    const defaultClassrooms: Classroom[] = [
+      // القاعات الخاصة
+      {
+        id: 1,
+        name_ar: 'القاعة الذكية',
+        type: 'smart',
+        capacity: 30,
+        equipment: ['بروجكتر', 'سبورة ذكية', 'نظام صوتي'],
+        isActive: true
+      },
+      {
+        id: 2,
+        name_ar: 'قاعة المصادر',
+        type: 'resource_center',
+        capacity: 25,
+        equipment: ['كمبيوترات', 'طاولات مجموعات'],
+        isActive: true
+      },
+      {
+        id: 3,
+        name_ar: 'ساحة الطابور القديم',
+        type: 'assembly',
+        capacity: 200,
+        equipment: ['نظام صوتي', 'منصة'],
+        isActive: true
+      }
+    ]
+    
+    let id = 4
+    
+    // إضافة الصفوف من 5 إلى 10 (3 شعب لكل صف)
+    for (let grade = 5; grade <= 10; grade++) {
+      for (let section = 1; section <= 3; section++) {
+        defaultClassrooms.push({
+          id: id++,
+          name_ar: `الصف ${getGradeText(grade)} - الشعبة ${section}`,
+          type: 'classroom',
+          grade: grade,
+          section: section.toString(),
+          capacity: 30,
+          equipment: ['سبورة', 'مقاعد'],
+          isActive: true
+        })
+      }
+    }
+    
+    // إضافة الصفوف 11 و 12 (6 شعب لكل صف)
+    for (let grade = 11; grade <= 12; grade++) {
+      for (let section = 1; section <= 6; section++) {
+        defaultClassrooms.push({
+          id: id++,
+          name_ar: `الصف ${getGradeText(grade)} - الشعبة ${section}`,
+          type: 'classroom',
+          grade: grade,
+          section: section.toString(),
+          capacity: 30,
+          equipment: ['سبورة', 'مقاعد'],
+          isActive: true
+        })
+      }
+    }
+    
+    return defaultClassrooms
+  }
+  
+  // تحويل رقم الصف إلى نص عربي
+  const getGradeText = (grade: number): string => {
+    const gradeNames: Record<number, string> = {
+      5: 'الخامس',
+      6: 'السادس', 
+      7: 'السابع',
+      8: 'الثامن',
+      9: 'التاسع',
+      10: 'العاشر',
+      11: 'الحادي عشر',
+      12: 'الثاني عشر'
+    }
+    return gradeNames[grade] || grade.toString()
   }
 
   // Group classrooms by type

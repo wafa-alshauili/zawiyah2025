@@ -162,9 +162,45 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-indigo-900 font-cairo mb-4">
             🏫 زاوية 2025
           </h1>
-          <p className="text-xl text-gray-700 font-cairo mb-6">
+          <p className="text-xl text-gray-700 font-cairo mb-4">
             مدرسة بسياء للتعليم الأساسي (5-12) - نظام حجز القاعات الدراسية
           </p>
+          
+          {/* وصف الموقع */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-soft p-6 max-w-4xl mx-auto mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-700">
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-100 p-3 rounded-full mb-3">
+                  <FaCalendarCheck className="text-2xl text-blue-600" />
+                </div>
+                <h3 className="font-semibold font-cairo mb-2">حجز سهل وسريع</h3>
+                <p className="text-sm text-center font-cairo">
+                  احجز القاعات الدراسية بسهولة من خلال الجدول الأسبوعي التفاعلي
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="bg-green-100 p-3 rounded-full mb-3">
+                  <FaUsers className="text-2xl text-green-600" />
+                </div>
+                <h3 className="font-semibold font-cairo mb-2">تزامن فوري</h3>
+                <p className="text-sm text-center font-cairo">
+                  تحديثات مباشرة لجميع المستخدمين لضمان عدم تضارب الحجوزات
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <div className="bg-purple-100 p-3 rounded-full mb-3">
+                  <FaDoorOpen className="text-2xl text-purple-600" />
+                </div>
+                <h3 className="font-semibold font-cairo mb-2">إدارة شاملة</h3>
+                <p className="text-sm text-center font-cairo">
+                  متابعة جميع القاعات والحجوزات مع إحصائيات مفصلة ومرونة عالية
+                </p>
+              </div>
+            </div>
+          </div>
+          
           <LiveClock />
         </div>
 
@@ -184,7 +220,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-600 font-cairo font-semibold">القاعات المتاحة</p>
-                <p className="text-3xl font-bold text-green-800">23</p>
+                <p className="text-3xl font-bold text-green-800">33</p>
               </div>
               <FaDoorOpen className="text-4xl text-green-500" />
             </div>
