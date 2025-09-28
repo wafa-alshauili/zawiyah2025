@@ -836,36 +836,37 @@ export default function BookingsPage() {
       
       {/* نافذة عرض حجوزات المعلم */}
       {showTeacherBookings && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-indigo-800 font-cairo mb-2">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 lg:p-8 w-full max-w-xs sm:max-w-md lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="text-center mb-4 sm:mb-6">
+              <h3 className="text-xl sm:text-2xl font-bold text-indigo-800 font-cairo mb-2">
                 📄 حجوزات المعلم
               </h3>
-              <p className="text-gray-600 font-cairo">
+              <p className="text-sm sm:text-base text-gray-600 font-cairo">
                 أدخل رقم هاتفك لعرض جميع حجوزاتك
               </p>
             </div>
             
-            <div className="mb-6">
-              <div className="flex gap-4 items-end">
+            <div className="mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
                 <div className="flex-1">
-                  <label className="block text-gray-700 font-cairo font-semibold mb-2">
+                  <label className="block text-gray-700 font-cairo font-semibold mb-2 text-sm sm:text-base">
                     📱 رقم الهاتف:
                   </label>
                   <input
                     type="tel"
                     value={teacherPhone}
                     onChange={(e) => setTeacherPhone(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg font-cairo text-center text-lg"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg font-cairo text-center text-base sm:text-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="05xxxxxxxx"
                     maxLength={10}
+                    dir="ltr"
                   />
                 </div>
                 <button
                   onClick={searchTeacherBookings}
                   disabled={!teacherPhone || teacherPhone.length < 10}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-cairo hover:bg-blue-700 disabled:bg-gray-300 transition-colors whitespace-nowrap"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg font-cairo hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
                 >
                   🔍 بحث
                 </button>
@@ -873,17 +874,17 @@ export default function BookingsPage() {
             </div>
             
             {teacherBookingsList.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                <h4 className="font-semibold text-blue-800 font-cairo mb-4 text-lg">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6">
+                <h4 className="font-semibold text-blue-800 font-cairo mb-3 sm:mb-4 text-base sm:text-lg">
                   📋 حجوزاتك ({teacherBookingsList.length} حجز):
                 </h4>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="space-y-3 sm:space-y-4 max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto">
                   {teacherBookingsList.map((item, index) => (
-                    <div key={item.key} className="bg-white border border-blue-300 rounded-lg p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm font-cairo">
+                    <div key={item.key} className="bg-white border border-blue-300 rounded-lg p-3 sm:p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm font-cairo">
                         <div className="space-y-1">
                           <p><strong>🏷️ الرقم المرجعي:</strong></p>
-                          <div className="font-mono bg-gray-100 p-2 rounded text-center font-bold">
+                          <div className="font-mono bg-gray-100 p-1 sm:p-2 rounded text-center font-bold text-xs sm:text-sm break-all">
                             {item.booking.referenceNumber}
                           </div>
                         </div>
@@ -896,14 +897,14 @@ export default function BookingsPage() {
                           <p><strong>📚 المادة:</strong> {item.booking.subject}</p>
                           <p><strong>🎯 الصف:</strong> {item.booking.grade} - {item.booking.section}</p>
                           {item.booking.notes && (
-                            <p><strong>📝 ملاحظات:</strong> {item.booking.notes}</p>
+                            <p><strong>📝 ملاحظات:</strong> <span className="break-words">{item.booking.notes}</span></p>
                           )}
                         </div>
                       </div>
-                      <div className="flex justify-end mt-3">
+                      <div className="flex justify-center sm:justify-end mt-2 sm:mt-3">
                         <button
                           onClick={() => deleteTeacherBooking(item.key)}
-                          className="px-3 py-1 bg-red-500 text-white rounded font-cairo hover:bg-red-600 transition-colors text-sm"
+                          className="w-full sm:w-auto px-3 py-1 sm:py-2 bg-red-500 text-white rounded font-cairo hover:bg-red-600 transition-colors text-xs sm:text-sm"
                         >
                           🗑️ حذف
                         </button>
@@ -914,10 +915,10 @@ export default function BookingsPage() {
               </div>
             )}
             
-            <div className="flex justify-center">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-4 sm:mt-6">
               <button
                 onClick={closeTeacherBookingsModal}
-                className="px-6 py-3 bg-gray-500 text-white rounded-lg font-cairo hover:bg-gray-600 transition-colors"
+                className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 text-white rounded-lg font-cairo hover:bg-gray-600 transition-colors text-sm sm:text-base"
               >
                 ✖️ إغلاق
               </button>
