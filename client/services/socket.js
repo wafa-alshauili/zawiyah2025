@@ -36,15 +36,22 @@ class SocketService {
 
     // إعداد المستمعين الأساسيين
     this.socket.on('connect', () => {
-      console.log('🔗 متصل بخادم زاوية 2025');
+      console.log('🔗 متصل بخادم زاوية 2025 -', serverPath);
+      // طلب البيانات الحالية عند الاتصال
+      this.getBookings();
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('❌ انقطع الاتصال مع خادم زاوية 2025');
+    this.socket.on('disconnect', (reason) => {
+      console.log('❌ انقطع الاتصال مع خادم زاوية 2025 -', reason);
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('خطأ في الاتصال:', error);
+      console.error('خطأ في الاتصال مع الخادم:', error.message || error);
+    });
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log('🔄 تم إعادة الاتصال بالخادم - المحاولة:', attemptNumber);
+      this.getBookings();
     });
 
     // مستمعي البيانات الرئيسيين

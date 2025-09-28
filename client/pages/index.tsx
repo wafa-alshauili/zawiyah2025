@@ -47,16 +47,23 @@ export default function Home() {
     socketService.connect()
     
     // تحديث البيانات عند تحديث الحجوزات
-    socketService.on('bookings-updated', () => {
-      setTimeout(fetchData, 500) // انتظار قليل للتأكد من تحديث localStorage
+    socketService.on('bookings-updated', (data) => {
+      console.log('🏠 الصفحة الرئيسية: تحديث جميع الحجوزات')
+      // تحديث localStorage مع البيانات الجديدة
+      if (data.bookings) {
+        localStorage.setItem('zawiyah-bookings', JSON.stringify(data.bookings))
+      }
+      fetchData()
     })
     
-    socketService.on('booking-created', () => {
-      setTimeout(fetchData, 500)
+    socketService.on('booking-created', (data) => {
+      console.log('🏠 الصفحة الرئيسية: حجز جديد -', data.booking.teacher)
+      fetchData()
     })
     
-    socketService.on('booking-deleted', () => {
-      setTimeout(fetchData, 500)
+    socketService.on('booking-deleted', (data) => {
+      console.log('🏠 الصفحة الرئيسية: تم حذف حجز -', data.referenceNumber)
+      fetchData()
     })
     
     // تحديث دوري كل 30 ثانية

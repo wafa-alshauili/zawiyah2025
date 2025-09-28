@@ -119,7 +119,7 @@ app.get('/api/health', (req, res) => {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('مستخدم جديد متصل:', socket.id);
+  console.log('🔗 مستخدم جديد متصل:', socket.id, '| إجمالي المتصلين:', io.engine.clientsCount);
 
   // Join classroom room for real-time updates
   socket.on('join-classroom', (classroomId) => {
@@ -137,6 +137,7 @@ io.on('connection', (socket) => {
   socket.on('get-bookings', () => {
     try {
       const bookings = db.getBookings();
+      console.log('📋 إرسال الحجوزات للعميل:', Object.keys(bookings).length, 'حجز');
       socket.emit('bookings-updated', { bookings });
     } catch (error) {
       console.error('خطأ في جلب الحجوزات:', error);
@@ -147,21 +148,34 @@ io.on('connection', (socket) => {
   // إنشاء حجز جديد
   socket.on('create-booking', (data) => {
     try {
-      console.log('📝 طلب إنشاء حجز جديد:', data);
+      console.log('📝 طلب إنشاء حجز جديد:', data.key, '|', data.booking.teacher);
+      
+      // التحقق من عدم وجود تضارب في الحجز
+      const existingBookings = db.getBookings();
+      if (existingBookings[data.key]) {
+        console.log('⚠️ حجز موجود مسبقاً في هذا الوقت');
+        socket.emit('booking-error', { 
+          message: 'هذا الوقت محجوز مسبقاً، يرجى اختيار وقت آخر' 
+        });
+        return;
+      }
       
       // حفظ الحجز
       const success = db.addBooking(data.key, data.booking);
       
       if (success) {
-        // إرسال تأكيد للمرسل
+        console.log('✅ تم حفظ الحجز في قاعدة البيانات:', data.key);
+        
+        // إرسال تأكيد للمرسل أولاً
         socket.emit('booking-success', { key: data.key, booking: data.booking });
         
-        // إرسال التحديث لجميع المتصلين
+        // إرسال التحديث لجميع المتصلين (بما في ذلك المرسل)
         io.emit('booking-created', { key: data.key, booking: data.booking });
         
-        console.log('✅ تم إنشاء الحجز بنجاح:', data.key);
+        console.log('📡 تم إرسال التحديث لجميع المتصلين:', io.engine.clientsCount, 'عميل');
       } else {
-        socket.emit('booking-error', { message: 'فشل في حفظ الحجز' });
+        console.error('❌ فشل في حفظ الحجز');
+        socket.emit('booking-error', { message: 'فشل في حفظ الحجز، يرجى المحاولة مرة أخرى' });
       }
     } catch (error) {
       console.error('خطأ في إنشاء الحجز:', error);
@@ -200,20 +214,23 @@ io.on('connection', (socket) => {
   // حذف حجز
   socket.on('delete-booking', (data) => {
     try {
-      console.log('🗑️ طلب حذف حجز:', data);
+      console.log('🗑️ طلب حذف حجز برقم مرجعي:', data.referenceNumber);
       
       const success = db.deleteBooking(data.referenceNumber);
       
       if (success) {
+        console.log('✅ تم حذف الحجز من قاعدة البيانات:', data.referenceNumber);
+        
         // إرسال تأكيد للمرسل
         socket.emit('booking-delete-success', { referenceNumber: data.referenceNumber });
         
         // إرسال التحديث لجميع المتصلين
         io.emit('booking-deleted', { referenceNumber: data.referenceNumber });
         
-        console.log('✅ تم حذف الحجز بنجاح:', data.referenceNumber);
+        console.log('📡 تم إرسال تحديث الحذف لجميع المتصلين:', io.engine.clientsCount, 'عميل');
       } else {
-        socket.emit('booking-error', { message: 'لم يتم العثور على الحجز' });
+        console.log('❌ لم يتم العثور على حجز للحذف');
+        socket.emit('booking-error', { message: 'لم يتم العثور على الحجز المطلوب حذفه' });
       }
     } catch (error) {
       console.error('خطأ في حذف الحجز:', error);
@@ -257,7 +274,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('مستخدم انقطع الاتصال:', socket.id);
+    console.log('❌ مستخدم انقطع الاتصال:', socket.id, '| المتبقي:', io.engine.clientsCount - 1);
   });
 });
 

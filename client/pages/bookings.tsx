@@ -51,14 +51,15 @@ export default function BookingsPage() {
     
     // إعداد مستمعي Socket.IO للتزامن الفوري
     socketService.on('bookings-updated', (data: any) => {
-      console.log('📅 تم تحديث الحجوزات عبر Socket:', data)
-      setBookings(data.bookings || {})
-      // تحديث localStorage أيضاً
-      localStorage.setItem('zawiyah-bookings', JSON.stringify(data.bookings || {}))
+      console.log('📅 تم تحديث جميع الحجوزات عبر Socket:', Object.keys(data.bookings || {}).length, 'حجز')
+      const newBookings = data.bookings || {}
+      setBookings(newBookings)
+      // تحديث localStorage كنسخة احتياطية
+      localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
     })
     
     socketService.on('booking-created', (data: any) => {
-      console.log('✅ تم إنشاء حجز جديد عبر Socket:', data)
+      console.log('✅ تم إنشاء حجز جديد عبر Socket:', data.key, '|', data.booking.teacher)
       setBookings(prev => {
         const updated = { ...prev, [data.key]: data.booking }
         localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
@@ -67,25 +68,39 @@ export default function BookingsPage() {
     })
     
     socketService.on('booking-updated', (data: any) => {
-      console.log('📝 تم تحديث حجز عبر Socket:', data)
+      console.log('📝 تم تحديث حجز عبر Socket:', data.key, '|', data.booking.teacher)
       setBookings(prev => {
-        const updated = { ...prev }
-        if (updated[data.key]) {
-          updated[data.key] = data.booking
-          localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
-        }
+        const updated = { ...prev, [data.key]: data.booking }
+        localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
         return updated
       })
     })
     
     socketService.on('booking-deleted', (data: any) => {
-      console.log('🗑️ تم حذف حجز عبر Socket:', data)
+      console.log('🗑️ تم حذف حجز عبر Socket:', data.referenceNumber)
       setBookings(prev => {
         const updated = { ...prev }
-        delete updated[data.key]
+        // البحث عن الحجز بالرقم المرجعي وحذفه
+        for (const [key, booking] of Object.entries(updated)) {
+          if ((booking as any).referenceNumber === data.referenceNumber) {
+            delete updated[key]
+            break
+          }
+        }
         localStorage.setItem('zawiyah-bookings', JSON.stringify(updated))
         return updated
       })
+    })
+    
+    // إضافة مستمع للأخطاء
+    socketService.on('booking-error', (data: any) => {
+      console.error('❌ خطأ في الحجز:', data.message)
+      alert(`خطأ في الحجز: ${data.message}`)
+    })
+    
+    // إضافة مستمع لتأكيد نجاح العمليات
+    socketService.on('booking-success', (data: any) => {
+      console.log('✅ تأكيد نجاح الحجز:', data.key)
     })
     
     // طلب البيانات الحالية من الخادم
@@ -106,10 +121,14 @@ export default function BookingsPage() {
       const savedBookings = localStorage.getItem('zawiyah-bookings')
       if (savedBookings) {
         try {
-          setBookings(JSON.parse(savedBookings))
+          const bookingsData = JSON.parse(savedBookings)
+          console.log('📂 تحميل البيانات المحفوظة محلياً:', Object.keys(bookingsData).length, 'حجز')
+          setBookings(bookingsData)
         } catch (error) {
-          console.error('خطأ في تحميل البيانات من localStorage:', error)
+          console.error('خطأ في تحليل البيانات المحفوظة:', error)
         }
+      } else {
+        console.log('📂 لا توجد بيانات محفوظة محلياً')
       }
     }
   }
@@ -359,22 +378,27 @@ export default function BookingsPage() {
       period: selectedSlot.period
     }
     
-    // إرسال الحجز للخادم عبر Socket.IO
-    socketService.createBooking({
-      key: bookingKey,
-      booking: newBooking
-    })
+    console.log('📝 إنشاء حجز جديد:', bookingKey, newBooking)
     
-    // تحديث حالة المحلية أيضاً (نسخة احتياطية)
-    setBookings(prev => {
-      const updatedBookings = {
-        ...prev,
-        [bookingKey]: newBooking
-      }
-      // حفظ في localStorage مع الحالة المحدثة
-      localStorage.setItem('zawiyah-bookings', JSON.stringify(updatedBookings))
-      return updatedBookings
-    })
+    // إرسال الحجز للخادم عبر Socket.IO أولاً
+    if (socketService.isConnected()) {
+      socketService.createBooking({
+        key: bookingKey,
+        booking: newBooking
+      })
+      console.log('🔗 تم إرسال الحجز عبر Socket.IO')
+    } else {
+      console.warn('⚠️ غير متصل بالخادم، الحفظ محلياً فقط')
+      // إذا لم نكن متصلين، احفظ محلياً وحاول الإرسال لاحقاً
+      setBookings(prev => {
+        const updatedBookings = {
+          ...prev,
+          [bookingKey]: newBooking
+        }
+        localStorage.setItem('zawiyah-bookings', JSON.stringify(updatedBookings))
+        return updatedBookings
+      })
+    }
     
     setConfirmationNumber(referenceNum)
     closeModal()
