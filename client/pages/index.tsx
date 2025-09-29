@@ -48,43 +48,64 @@ export default function Home() {
     
     // تحديث البيانات عند تحديث الحجوزات
     socketService.on('bookings-updated', (data) => {
-      console.log('🏠 الصفحة الرئيسية: تحديث جميع الحجوزات')
-      // تحديث localStorage مع البيانات الجديدة
+      console.log('🏠 الصفحة الرئيسية: تحديث شامل للحجوزات -', Object.keys(data.bookings || {}).length, 'حجز')
+      // تحديث localStorage فقط عند وصول بيانات جديدة
       if (data.bookings) {
-        localStorage.setItem('zawiyah-bookings', JSON.stringify(data.bookings))
+        try {
+          localStorage.setItem('zawiyah-bookings', JSON.stringify(data.bookings))
+          console.log('💾 تم تحديث localStorage ببيانات الخادم')
+        } catch (error) {
+          console.error('خطأ في حفظ localStorage:', error)
+        }
       }
-      fetchData()
+      // استخدام البيانات الجديدة مباشرة
+      processBookingsData(data.bookings || {})
     })
     
     socketService.on('booking-created', (data) => {
       console.log('🏠 الصفحة الرئيسية: حجز جديد -', data.booking.teacher)
-      fetchData()
+      // تحديث سريع بدون إعادة قراءة localStorage
+      fetchDataFromCurrentState()
     })
     
     socketService.on('booking-deleted', (data) => {
       console.log('🏠 الصفحة الرئيسية: تم حذف حجز -', data.referenceNumber)
-      fetchData()
+      // تحديث سريع بدون إعادة قراءة localStorage
+      fetchDataFromCurrentState()
     })
     
-    // لا نحتاج لتحديث دوري - Socket.IO يتولى التحديثات الفورية
+    // مراقبة تغييرات localStorage من تبويبات أخرى
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'zawiyah-bookings' && e.newValue) {
+        try {
+          console.log('🏠 تحديث من تبويب آخر - تزامن البيانات')
+          const newBookings = JSON.parse(e.newValue)
+          processBookingsData(newBookings)
+        } catch (error) {
+          console.error('خطأ في تحليل البيانات من التبويب الآخر:', error)
+        }
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
     
     return () => {
+      // تنظيف مستمع التخزين
+      window.removeEventListener('storage', handleStorageChange)
+      
       // عدم قطع الاتصال - دع الصفحات الأخرى تستخدم نفس الاتصال
       console.log('🏠 مغادرة الصفحة الرئيسية - الاتصال يبقى مفتوحاً')
     }
   }, [])
 
-  const fetchData = () => {
+  // دالة لمعالجة البيانات من مصدر محدد
+  const processBookingsData = (bookingsData: any) => {
     try {
-      // جلب بيانات الحجوزات من localStorage
-      const bookingsData = localStorage.getItem('zawiyah-bookings')
-      const bookings = bookingsData ? JSON.parse(bookingsData) : {}
-      
       const today = new Date()
       const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
       const todayName = dayNames[today.getDay()]
       
-      const allBookings = Object.entries(bookings).map(([key, booking]: [string, any]) => ({ 
+      const allBookings = Object.entries(bookingsData).map(([key, booking]: [string, any]) => ({ 
         key, 
         booking: booking as BookingItem['booking']
       }))
@@ -114,8 +135,32 @@ export default function Home() {
       setTodayCount(todayBookings.length)
       
     } catch (error) {
-      console.error('خطأ في جلب البيانات:', error)
+      console.error('خطأ في معالجة بيانات الحجوزات:', error)
     } finally {
+      setLoading(false)
+    }
+  }
+
+  // دالة تحديث سريعة بدون إعادة قراءة localStorage
+  const fetchDataFromCurrentState = () => {
+    try {
+      const bookingsData = localStorage.getItem('zawiyah-bookings')
+      const bookings = bookingsData ? JSON.parse(bookingsData) : {}
+      processBookingsData(bookings)
+    } catch (error) {
+      console.error('خطأ في التحديث السريع:', error)
+    }
+  }
+
+  // دالة التحميل الأولية من localStorage
+  const fetchData = () => {
+    try {
+      console.log('📂 تحميل أولي من localStorage')
+      const bookingsData = localStorage.getItem('zawiyah-bookings')
+      const bookings = bookingsData ? JSON.parse(bookingsData) : {}
+      processBookingsData(bookings)
+    } catch (error) {
+      console.error('خطأ في جلب البيانات:', error)
       setLoading(false)
     }
   }

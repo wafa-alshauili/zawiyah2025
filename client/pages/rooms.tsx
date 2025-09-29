@@ -46,6 +46,28 @@ export default function Rooms() {
   useEffect(() => {
     fetchClassrooms()
     fetchBookings()
+    
+    // تحديث البيانات عند تحديث الحجوزات عبر Socket.IO
+    if (typeof window !== 'undefined') {
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'zawiyah-bookings' && e.newValue) {
+          try {
+            console.log('🏫 تحديث بيانات الحجوزات في صفحة القاعات من تبويب آخر')
+            const bookingsData = JSON.parse(e.newValue)
+            const bookingsArray = Object.entries(bookingsData)
+            setBookings(bookingsArray)
+          } catch (error) {
+            console.error('خطأ في تحليل البيانات من التبويب الآخر:', error)
+          }
+        }
+      }
+      
+      window.addEventListener('storage', handleStorageChange)
+      
+      return () => {
+        window.removeEventListener('storage', handleStorageChange)
+      }
+    }
   }, [])
 
   const fetchBookings = () => {
@@ -55,6 +77,7 @@ export default function Rooms() {
         const bookingsData = JSON.parse(savedBookings)
         const bookingsArray = Object.entries(bookingsData)
         setBookings(bookingsArray)
+        console.log('📊 تحديث بيانات الحجوزات في صفحة القاعات:', bookingsArray.length, 'حجز')
       }
     } catch (error) {
       console.error('خطأ في جلب بيانات الحجوزات:', error)
