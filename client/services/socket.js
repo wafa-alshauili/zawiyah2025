@@ -24,14 +24,27 @@ class SocketService {
         serverPath = 'http://localhost:3001';
       }
     }
+    // إذا كان لدينا socket متصل، استخدمه
     if (this.socket?.connected) {
+      console.log('🔄 إعادة استخدام الاتصال الموجود');
+      return this.socket;
+    }
+    
+    // إذا كان لدينا socket غير متصل، حاول إعادة الاتصال
+    if (this.socket && !this.socket.connected) {
+      console.log('🔄 محاولة إعادة الاتصال للـ socket الموجود');
+      this.socket.connect();
       return this.socket;
     }
 
     this.socket = io(serverPath, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
-      forceNew: true
+      forceNew: false, // السماح بإعادة استخدام الاتصالات الموجودة
+      autoConnect: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
     });
 
     // إعداد المستمعين الأساسيين

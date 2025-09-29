@@ -38,6 +38,21 @@ export default function BookingsPage() {
       }
     }, 2000)
     
+    // مراقبة تغييرات localStorage من تبويبات أخرى
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'zawiyah-bookings' && e.newValue) {
+        try {
+          console.log('📱 تحديث من تبويب آخر - تزامن البيانات')
+          const newBookings = JSON.parse(e.newValue)
+          setBookings(newBookings)
+        } catch (error) {
+          console.error('خطأ في تحليل البيانات من التبويب الآخر:', error)
+        }
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
     // التحقق من وجود حجز محدد للانتقال إليه
     const highlightBooking = sessionStorage.getItem('highlightBooking')
     if (highlightBooking) {
@@ -153,6 +168,9 @@ export default function BookingsPage() {
     return () => {
       // تنظيف التايم أوت
       clearTimeout(dataRequestTimeout)
+      
+      // تنظيف مستمع التخزين
+      window.removeEventListener('storage', handleStorageChange)
       
       // تنظيف المستمعين عند إلغاء التحميل
       socketService.off('bookings-updated')
