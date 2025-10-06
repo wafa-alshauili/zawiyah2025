@@ -27,75 +27,185 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-/* Custom components */
+/* Custom components - Fixed CSS without @apply */
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-200;
+    background-color: #0284c7;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0369a1;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200;
+    background-color: #e5e7eb;
+    color: #374151;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #d1d5db;
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-soft p-6 border border-gray-100;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    border: 1px solid #f3f4f6;
   }
   
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: all 0.2s;
+  }
+  
+  .input-field:focus {
+    box-shadow: 0 0 0 2px #0ea5e9;
+    border-color: transparent;
   }
   
   .time-slot {
-    @apply border-2 border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary-300 transition-colors duration-200;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .time-slot:hover {
+    border-color: #7dd3fc;
   }
   
   /* Mobile-first responsive improvements */
   .mobile-optimized {
-    @apply touch-manipulation select-none;
+    touch-action: manipulation;
+    user-select: none;
   }
   
   .mobile-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  @media (min-width: 640px) {
+    .mobile-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .mobile-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .mobile-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
   
   .mobile-btn {
-    @apply px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base rounded-lg font-medium transition-all duration-200 touch-manipulation;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    touch-action: manipulation;
+  }
+  
+  @media (min-width: 640px) {
+    .mobile-btn {
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+    }
   }
   
   .mobile-card {
-    @apply bg-white rounded-lg shadow-soft p-3 sm:p-6 border border-gray-100 mb-4 sm:mb-6;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    padding: 0.75rem;
+    border: 1px solid #f3f4f6;
+    margin-bottom: 1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .mobile-card {
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
   }
   
   .mobile-input {
-    @apply w-full px-3 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent touch-manipulation;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: all 0.2s;
+    touch-action: manipulation;
+  }
+  
+  .mobile-input:focus {
+    box-shadow: 0 0 0 2px #0ea5e9;
+    border-color: transparent;
   }
   
   .mobile-modal {
-    @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.5);
   }
   
   .mobile-modal-content {
-    @apply bg-white rounded-lg w-full max-w-lg max-h-screen overflow-y-auto p-4 sm:p-6;
+    background-color: white;
+    border-radius: 0.5rem;
+    width: 100%;
+    max-width: 32rem;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 1rem;
   }
   
-  /* Touch-friendly time slots */
-  .time-slot-mobile {
-    @apply min-h-12 sm:min-h-16 text-xs sm:text-sm border-2 border-gray-200 rounded-lg p-2 sm:p-3 text-center cursor-pointer transition-all duration-200 touch-manipulation;
-  }
-  
-  .time-slot-mobile:hover,
-  .time-slot-mobile:active {
-    @apply border-primary-300 bg-primary-50 transform scale-105;
+  @media (min-width: 640px) {
+    .mobile-modal-content {
+      padding: 1.5rem;
+    }
   }
   
   /* Booking grid optimizations */
   .booking-grid {
-    @apply grid gap-1 sm:gap-2 text-xs sm:text-sm;
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.75rem;
     grid-template-columns: 100px 1fr;
   }
   
   @media (min-width: 640px) {
     .booking-grid {
+      gap: 0.5rem;
+      font-size: 0.875rem;
       grid-template-columns: 120px 1fr;
     }
   }
@@ -108,36 +218,67 @@ body {
   
   /* Scrollable horizontal tables on mobile */
   .mobile-scroll {
-    @apply overflow-x-auto -mx-4 sm:mx-0;
+    overflow-x: auto;
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .mobile-scroll {
+      margin-left: 0;
+      margin-right: 0;
+    }
   }
   
   .mobile-table {
-    @apply min-w-full table-auto border-collapse;
+    min-width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
   }
   
   /* Status indicators */
   .status-available {
-    @apply bg-green-100 border-green-300 text-green-800 hover:bg-green-200;
+    background-color: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+  }
+  
+  .status-available:hover {
+    background-color: #bbf7d0;
   }
   
   .status-booked {
-    @apply bg-red-100 border-red-300 text-red-800 cursor-not-allowed;
+    background-color: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+    cursor: not-allowed;
   }
   
   .status-selected {
-    @apply bg-blue-100 border-blue-500 text-blue-800 ring-2 ring-blue-300;
+    background-color: #dbeafe;
+    border-color: #3b82f6;
+    color: #1e40af;
+    box-shadow: 0 0 0 2px #93c5fd;
   }
   
   .time-slot.available {
-    @apply bg-green-50 border-green-200 hover:bg-green-100;
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+  
+  .time-slot.available:hover {
+    background-color: #dcfce7;
   }
   
   .time-slot.booked {
-    @apply bg-red-50 border-red-200 cursor-not-allowed;
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    cursor: not-allowed;
   }
   
   .time-slot.selected {
-    @apply bg-primary-50 border-primary-500;
+    background-color: #f0f9ff;
+    border-color: #0ea5e9;
   }
 }
 
@@ -173,17 +314,26 @@ body {
 
 /* Toast notifications */
 .toast {
-  @apply fixed top-4 right-4 z-50 bg-white border-r-4 shadow-medium rounded-lg p-4 min-w-80;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  background-color: white;
+  border-right: 4px solid;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-width: 20rem;
 }
 
 .toast.success {
-  @apply border-success-500;
+  border-right-color: #10b981;
 }
 
 .toast.error {
-  @apply border-error-500;
+  border-right-color: #ef4444;
 }
 
 .toast.warning {
-  @apply border-warning-500;
+  border-right-color: #f59e0b;
 }
