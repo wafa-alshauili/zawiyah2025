@@ -147,10 +147,40 @@ app.get('/api/stats/dashboard', (req, res) => {
 
 app.post('/api/bookings', (req, res) => {
   try {
-    const booking = db.addBooking(req.body);
-    res.json({ success: true, data: booking });
+    const { key, booking } = req.body;
+    const success = db.addBooking(key, booking);
+    if (success) {
+      res.json({ success: true, data: { key, booking } });
+    } else {
+      res.status(500).json({ success: false, message: 'فشل في حفظ الحجز' });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Delete booking by reference number
+app.delete('/api/bookings', (req, res) => {
+  try {
+    const { referenceNumber } = req.body;
+    
+    if (!referenceNumber) {
+      return res.status(400).json({ success: false, error: 'الرقم المرجعي مطلوب' });
+    }
+
+    console.log('🗑️ طلب حذف حجز برقم مرجعي:', referenceNumber);
+    
+    const success = db.deleteBooking(referenceNumber);
+    
+    if (success) {
+      console.log('✅ تم حذف الحجز بنجاح');
+      res.json({ success: true, message: 'تم حذف الحجز بنجاح' });
+    } else {
+      res.status(404).json({ success: false, error: 'لم يتم العثور على الحجز' });
+    }
+  } catch (error) {
+    console.error('خطأ في حذف الحجز:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

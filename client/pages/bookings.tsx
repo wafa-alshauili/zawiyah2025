@@ -531,6 +531,58 @@ export default function BookingsPage() {
     return teacherBookings
   }
 
+  // حذف حجز من قائمة حجوزات المعلم
+  const deleteTeacherBooking = async (bookingKey: string) => {
+    const booking = teacherBookingsList.find(item => item.key === bookingKey)
+    if (!booking) return
+    
+    const confirmDelete = confirm(`هل أنت متأكد من حذف هذا الحجز؟\n\nالمعلم: ${booking.booking.teacher}\nالقاعة: ${booking.booking.room}\nاليوم: ${booking.booking.day}\nالفترة: ${booking.booking.period}`)
+    
+    if (confirmDelete) {
+      try {
+        // حذف من الخادم إذا كان متاحاً
+        let serverSuccess = false
+        try {
+          if (booking.booking.referenceNumber) {
+            const response = await fetch('/api/bookings', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ referenceNumber: booking.booking.referenceNumber })
+            })
+            serverSuccess = response.ok
+          }
+        } catch (serverError) {
+          console.log('تعذر الحذف من الخادم، سيتم الحذف محلياً فقط')
+        }
+        
+        // حذف من البيانات المحلية
+        const updatedBookings = { ...bookings }
+        delete updatedBookings[bookingKey]
+        setBookings(updatedBookings)
+        
+        // تحديث قائمة حجوزات المعلم
+        const updatedTeacherBookings = teacherBookingsList.filter(item => item.key !== bookingKey)
+        setTeacherBookingsList(updatedTeacherBookings)
+        
+        // حفظ في localStorage
+        try {
+          localStorage.setItem('zawiyah-bookings', JSON.stringify(updatedBookings))
+        } catch (error) {
+          console.error('خطأ في حفظ localStorage:', error)
+        }
+        
+        // إشعار عبر Socket.IO
+        socketService.socket?.emit('delete-booking', { key: bookingKey, referenceNumber: booking.booking.referenceNumber })
+        
+        alert('تم حذف الحجز بنجاح!')
+        
+      } catch (error) {
+        console.error('خطأ في حذف الحجز:', error)
+        alert('حدث خطأ في حذف الحجز. يرجى المحاولة مرة أخرى.')
+      }
+    }
+  }
+
   // فتح نافذة حجوزات المعلم
   const openTeacherBookingsModal = () => {
     setShowTeacherBookings(true)
@@ -545,53 +597,56 @@ export default function BookingsPage() {
   }
 
   // البحث عن حجوزات المعلم
-  const searchTeacherBookings = () => {
+  const searchTeacherBookings = async () => {
     if (!teacherPhone || teacherPhone.length < 10) {
       alert('يرجى إدخال رقم هاتف صحيح (10 أرقام)')
       return
     }
     
-    const foundBookings = findTeacherBookings(teacherPhone.trim())
-    setTeacherBookingsList(foundBookings)
-    
-    if (foundBookings.length === 0) {
-      alert('لا توجد حجوزات لهذا الرقم. تأكد من الرقم المدخل.')
-    } else {
-      alert(`تم العثور على ${foundBookings.length} حجز لهذا الرقم`)
+    try {
+      // البحث في البيانات المحلية أولاً
+      const localBookings = findTeacherBookings(teacherPhone.trim())
+      
+      // محاولة البحث في الخادم أيضاً
+      let serverBookings = []
+      try {
+        const response = await fetch(`/api/bookings/search?phone=${teacherPhone.trim()}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            serverBookings = data.data
+          }
+        }
+      } catch (serverError) {
+        console.log('تعذر الاتصال بالخادم، سيتم البحث في البيانات المحلية فقط')
+      }
+      
+      // دمج النتائج وإزالة المكررات
+      const allBookings = [...localBookings]
+      serverBookings.forEach(serverBooking => {
+        const exists = allBookings.find(local => 
+          local.key === serverBooking.key || 
+          (local.booking.referenceNumber && local.booking.referenceNumber === serverBooking.booking.referenceNumber)
+        )
+        if (!exists) {
+          allBookings.push(serverBooking)
+        }
+      })
+      
+      setTeacherBookingsList(allBookings)
+      
+      if (allBookings.length === 0) {
+        alert('لا توجد حجوزات لهذا الرقم. تأكد من الرقم المدخل.')
+      } else {
+        console.log(`✅ تم العثور على ${allBookings.length} حجز لرقم الهاتف ${teacherPhone}`)
+      }
+    } catch (error) {
+      console.error('خطأ في البحث عن حجوزات المعلم:', error)
+      alert('حدث خطأ في البحث. يرجى المحاولة مرة أخرى.')
     }
   }
 
-  // حذف حجز محدد من قائمة المعلم
-  const deleteTeacherBooking = (bookingKey: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا الحجز؟')) {
-      // البحث عن رقم المرجع للحجز
-      const booking = bookings[bookingKey]
-      if (booking && booking.referenceNumber) {
-        // إرسال طلب الحذف للخادم
-        socketService.deleteBooking(booking.referenceNumber)
-      }
-      
-      // حذف من الحالة المحلية
-      setBookings(prev => {
-        const newBookings = { ...prev }
-        delete newBookings[bookingKey]
-        // تحديث localStorage مع الحالة المحدثة
-        localStorage.setItem('zawiyah-bookings', JSON.stringify(newBookings))
-        
-        // تحديث القائمة مع البيانات الجديدة
-        const updatedList = []
-        for (const [key, booking] of Object.entries(newBookings)) {
-          if (booking.phone === teacherPhone) {
-            updatedList.push({ key, booking })
-          }
-        }
-        setTeacherBookingsList(updatedList)
-        
-        return newBookings
-      })
-      alert('تم حذف الحجز بنجاح')
-    }
-  }
+
 
   // حفظ التعديل
   const saveEdit = () => {
