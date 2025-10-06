@@ -1,0 +1,22 @@
+{
+  "migrationTimestamp": "2025-10-06T08:46:57.732Z",
+  "summary": {
+    "originalCount": 10,
+    "migratedCount": 9,
+    "newFormatCount": 4,
+    "modernFormatCount": 5
+  },
+  "formats": {
+    "oldFormat": 2,
+    "legacyFormat": 2,
+    "modernFormat": 5
+  },
+  "datesCovered": [
+    "2025-09-26",
+    "2025-09-28",
+    "2025-10-06",
+    "2025-10-12"
+  ],
+  "assemblyBookings": 3,
+  "regularBookings": 6
+}

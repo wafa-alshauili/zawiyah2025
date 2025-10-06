@@ -57,15 +57,23 @@ export default function AssemblyPage() {
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.data) {
-            // Filter assembly bookings only
+            // Filter assembly bookings only with improved detection
             const assemblyBookings = {}
             Object.keys(data.data).forEach(key => {
-              if (key.startsWith('assembly-') || data.data[key].type === 'assembly') {
-                assemblyBookings[key] = data.data[key]
+              const booking = data.data[key]
+              const isAssemblyBooking = 
+                key.startsWith('assembly-') || 
+                booking.type === 'assembly' || 
+                booking.timeSlot === 'assembly' ||
+                booking.timeSlot === 'الطابور' ||
+                (booking.time && booking.time.includes('07:00'))
+              
+              if (isAssemblyBooking) {
+                assemblyBookings[key] = booking
               }
             })
             setBookings(assemblyBookings)
-            console.log('✅ تم تحميل حجوزات الطابور من الخادم')
+            console.log(`✅ تم تحميل ${Object.keys(assemblyBookings).length} حجز طابور من الخادم`)
           }
         }
       } catch (error) {
@@ -357,8 +365,27 @@ export default function AssemblyPage() {
 
   // الحصول على حجوزات فصل معين في تاريخ معين
   const getClassBookingsForDate = (classId: string, date: string) => {
+    const classData = classesData.find(c => c.id === classId)
+    const className = classData?.name || classId
+    
     return Object.entries(bookings).filter(([key, booking]) => {
-      return booking.date === date && booking.classroom === classId
+      // التحقق من التاريخ
+      const hasCorrectDate = booking.date === date
+      
+      // التحقق من الفصل - يمكن أن يكون في حقل classroom أو key
+      const matchesClass = 
+        booking.classroom === className ||
+        booking.classroom === classId ||
+        key.includes(classId) ||
+        (booking.grade === classData?.grade.toString() && booking.section === classData?.section.toString())
+      
+      // التأكد أنه حجز طابور
+      const isAssemblyBooking = 
+        booking.type === 'assembly' || 
+        booking.timeSlot === 'assembly' ||
+        key.startsWith('assembly-')
+      
+      return hasCorrectDate && matchesClass && isAssemblyBooking
     }).map(([key, booking]) => ({ key, ...booking }))
   }
 
