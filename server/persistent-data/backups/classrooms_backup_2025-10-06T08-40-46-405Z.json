@@ -1,0 +1,294 @@
+[
+  {
+    "id": 1,
+    "name_ar": "القاعة الذكية",
+    "type": "smart",
+    "equipment": ["projector", "smartboard", "sound_system"],
+    "isActive": true
+  },
+  {
+    "id": 2,
+    "name_ar": "قاعة المصادر",
+    "type": "resource_center",
+    "capacity": 25,
+    "equipment": ["computers", "group_tables"],
+    "isActive": true
+  },
+  {
+    "id": 3,
+    "name_ar": "ساحة الطابور القديم",
+    "type": "assembly",
+    "capacity": 200,
+    "isActive": true
+  },
+  {
+    "id": 4,
+    "name_ar": "الصف الخامس - الشعبة 1",
+    "type": "classroom",
+    "grade": 5,
+    "section": 1,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 5,
+    "name_ar": "الصف الخامس - الشعبة 2",
+    "type": "classroom",
+    "grade": 5,
+    "section": 2,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 6,
+    "name_ar": "الصف الخامس - الشعبة 3",
+    "type": "classroom",
+    "grade": 5,
+    "section": 3,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 7,
+    "name_ar": "الصف السادس - الشعبة 1",
+    "type": "classroom",
+    "grade": 6,
+    "section": 1,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 8,
+    "name_ar": "الصف السادس - الشعبة 2",
+    "type": "classroom",
+    "grade": 6,
+    "section": 2,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 9,
+    "name_ar": "الصف السادس - الشعبة 3",
+    "type": "classroom",
+    "grade": 6,
+    "section": 3,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 10,
+    "name_ar": "الصف السابع - الشعبة 1",
+    "type": "classroom",
+    "grade": 7,
+    "section": 1,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 11,
+    "name_ar": "الصف السابع - الشعبة 2",
+    "type": "classroom",
+    "grade": 7,
+    "section": 2,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 12,
+    "name_ar": "الصف السابع - الشعبة 3",
+    "type": "classroom",
+    "grade": 7,
+    "section": 3,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 13,
+    "name_ar": "الصف الثامن - الشعبة 1",
+    "type": "classroom",
+    "grade": 8,
+    "section": 1,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 14,
+    "name_ar": "الصف الثامن - الشعبة 2",
+    "type": "classroom",
+    "grade": 8,
+    "section": 2,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 15,
+    "name_ar": "الصف الثامن - الشعبة 3",
+    "type": "classroom",
+    "grade": 8,
+    "section": 3,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 16,
+    "name_ar": "الصف التاسع - الشعبة 1",
+    "type": "classroom",
+    "grade": 9,
+    "section": 1,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 17,
+    "name_ar": "الصف التاسع - الشعبة 2",
+    "type": "classroom",
+    "grade": 9,
+    "section": 2,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 18,
+    "name_ar": "الصف التاسع - الشعبة 3",
+    "type": "classroom",
+    "grade": 9,
+    "section": 3,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 19,
+    "name_ar": "الصف العاشر - الشعبة 1",
+    "type": "classroom",
+    "grade": 10,
+    "section": 1,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 20,
+    "name_ar": "الصف العاشر - الشعبة 2",
+    "type": "classroom",
+    "grade": 10,
+    "section": 2,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 21,
+    "name_ar": "الصف العاشر - الشعبة 3",
+    "type": "classroom",
+    "grade": 10,
+    "section": 3,
+    "capacity": 30,
+    "isActive": true
+  },
+  {
+    "id": 22,
+    "name_ar": "الصف الحادي عشر - الشعبة 1",
+    "type": "classroom",
+    "grade": 11,
+    "section": 1,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 23,
+    "name_ar": "الصف الحادي عشر - الشعبة 2",
+    "type": "classroom",
+    "grade": 11,
+    "section": 2,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 24,
+    "name_ar": "الصف الحادي عشر - الشعبة 3",
+    "type": "classroom",
+    "grade": 11,
+    "section": 3,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 25,
+    "name_ar": "الصف الحادي عشر - الشعبة 4",
+    "type": "classroom",
+    "grade": 11,
+    "section": 4,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 26,
+    "name_ar": "الصف الحادي عشر - الشعبة 5",
+    "type": "classroom",
+    "grade": 11,
+    "section": 5,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 27,
+    "name_ar": "الصف الحادي عشر - الشعبة 6",
+    "type": "classroom",
+    "grade": 11,
+    "section": 6,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 28,
+    "name_ar": "الصف الثاني عشر - الشعبة 1",
+    "type": "classroom",
+    "grade": 12,
+    "section": 1,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 29,
+    "name_ar": "الصف الثاني عشر - الشعبة 2",
+    "type": "classroom",
+    "grade": 12,
+    "section": 2,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 30,
+    "name_ar": "الصف الثاني عشر - الشعبة 3",
+    "type": "classroom",
+    "grade": 12,
+    "section": 3,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 31,
+    "name_ar": "الصف الثاني عشر - الشعبة 4",
+    "type": "classroom",
+    "grade": 12,
+    "section": 4,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 32,
+    "name_ar": "الصف الثاني عشر - الشعبة 5",
+    "type": "classroom",
+    "grade": 12,
+    "section": 5,
+    "capacity": 25,
+    "isActive": true
+  },
+  {
+    "id": 33,
+    "name_ar": "الصف الثاني عشر - الشعبة 6",
+    "type": "classroom",
+    "grade": 12,
+    "section": 6,
+    "capacity": 25,
+    "isActive": true
+  }
+]

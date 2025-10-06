@@ -8,6 +8,9 @@ require('dotenv').config();
 const PersistentStorage = require('./PersistentStorage');
 const persistentDB = new PersistentStorage();
 
+// Data Loss Prevention System - نظام منع فقدان البيانات
+const dataLossPrevention = require('./dataLossPrevention');
+
 // Fallback to in-memory database for compatibility
 const db = require('./db');
 
