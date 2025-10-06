@@ -19,10 +19,12 @@ export default function AssemblyPage() {
   const [reason, setReason] = useState('')
   const [notes, setNotes] = useState('')
   const [currentDate, setCurrentDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState('') // التاريخ المختار لعرض الحجوزات
   const [showStatsModal, setShowStatsModal] = useState(false)
   const [showTeacherBookings, setShowTeacherBookings] = useState(false)
   const [searchPhone, setSearchPhone] = useState('')
   const [teacherBookingsList, setTeacherBookingsList] = useState<any[]>([])
+  const [showClassBookings, setShowClassBookings] = useState<Record<string, boolean>>({})
 
   // إعداد تاريخ اليوم
   useEffect(() => {
@@ -34,6 +36,11 @@ export default function AssemblyPage() {
       day: 'numeric'
     })
     setCurrentDate(arabicDate)
+    
+    // تعيين التاريخ المختار لليوم الحالي بصيغة YYYY-MM-DD
+    const todayISO = today.toISOString().split('T')[0]
+    setSelectedDate(todayISO)
+    
     setIsClient(true)
   }, [])
 
@@ -158,8 +165,8 @@ export default function AssemblyPage() {
 
   // التحقق من وجود حجز لفصل معين
   const isClassBooked = (classId: string) => {
-    const today = new Date().toISOString().split('T')[0]
-    const key = `assembly-${classId}-${today}`
+    if (!selectedDate) return null
+    const key = `assembly-${classId}-${selectedDate}`
     return bookings[key] ? bookings[key] : null
   }
 
@@ -206,9 +213,16 @@ export default function AssemblyPage() {
       alert('يرجى إدخال سبب الحجز')
       return
     }
+    if (!selectedDate) {
+      alert('يرجى اختيار تاريخ الحجز')
+      return
+    }
+    if (!isValidSchoolDay(selectedDate)) {
+      alert('التاريخ المختار ليس يوم دراسي. أيام الدراسة: الأحد - الخميس')
+      return
+    }
 
-    const today = new Date().toISOString().split('T')[0]
-    const key = `assembly-${selectedClass}-${today}`
+    const key = `assembly-${selectedClass}-${selectedDate}`
     const selectedClassData = classesData.find(c => c.id === selectedClass)
     
     // حساب اسم المادة النهائي
@@ -227,7 +241,7 @@ export default function AssemblyPage() {
       subjectType: (grade === '11' || grade === '12') ? subjectType : undefined,
       grade: grade,
       reason: reason,
-      date: today,
+      date: selectedDate,
       time: '07:00 - 07:30',
       timeSlot: 'assembly',
       notes: notes || '',
@@ -333,12 +347,56 @@ export default function AssemblyPage() {
     }
   }
 
+  // تصفية الحجوزات حسب التاريخ المختار
+  const getBookingsForDate = (date: string) => {
+    const filtered = Object.entries(bookings).filter(([key, booking]) => {
+      return booking.date === date
+    })
+    return Object.fromEntries(filtered)
+  }
+
+  // الحصول على حجوزات فصل معين في تاريخ معين
+  const getClassBookingsForDate = (classId: string, date: string) => {
+    return Object.entries(bookings).filter(([key, booking]) => {
+      return booking.date === date && booking.classroom === classId
+    }).map(([key, booking]) => ({ key, ...booking }))
+  }
+
+  // تبديل عرض حجوزات الفصل
+  const toggleClassBookings = (classId: string) => {
+    setShowClassBookings(prev => ({
+      ...prev,
+      [classId]: !prev[classId]
+    }))
+  }
+
+  // تنسيق التاريخ للعرض
+  const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString('ar-SA', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  // التحقق من صحة التاريخ المختار (أيام الدراسة فقط)
+  const isValidSchoolDay = (dateString: string) => {
+    const date = new Date(dateString)
+    const dayOfWeek = date.getDay()
+    // الأحد (0) إلى الخميس (4) هي أيام الدراسة
+    return dayOfWeek >= 0 && dayOfWeek <= 4
+  }
+
   if (!isClient) {
     return <div className="flex justify-center items-center min-h-screen">جاري التحميل...</div>
   }
 
-  const bookedCount = classesData.filter(c => isClassBooked(c.id)).length
-  const availableCount = classesData.filter(c => !isClassBooked(c.id)).length
+  const bookedCount = selectedDate ? classesData.filter(c => getClassBookingsForDate(c.id, selectedDate).length > 0).length : 0
+  const availableCount = classesData.length - bookedCount
+  const totalBookingsForDate = selectedDate ? Object.keys(getBookingsForDate(selectedDate)).length : 0
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -388,6 +446,39 @@ export default function AssemblyPage() {
           </div>
         </div>
 
+        {/* اختيار التاريخ لعرض الحجوزات */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
+            📅 اختر التاريخ لعرض حجوزات الطابور
+          </h3>
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-700">التاريخ:</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-semibold text-blue-600">
+                {selectedDate ? formatDateForDisplay(selectedDate) : 'يرجى اختيار تاريخ'}
+              </div>
+              {selectedDate && !isValidSchoolDay(selectedDate) && (
+                <div className="text-sm text-red-600 mt-1">
+                  ⚠️ هذا اليوم ليس يوم دراسي (أيام الدراسة: الأحد - الخميس)
+                </div>
+              )}
+              {selectedDate && isValidSchoolDay(selectedDate) && (
+                <div className="text-sm text-green-600 mt-1">
+                  ✅ يوم دراسي صالح لعرض الحجوزات
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* إحصائيات سريعة */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6 text-center border-l-4 border-blue-500">
@@ -396,121 +487,243 @@ export default function AssemblyPage() {
             </div>
             <div className="text-gray-600 font-medium">إجمالي الفصول</div>
           </div>
+          <div className="bg-white rounded-lg shadow-md p-6 text-center border-l-4 border-orange-500">
+            <div className="text-3xl font-bold text-orange-600 mb-2">
+              {totalBookingsForDate}
+            </div>
+            <div className="text-gray-600 font-medium">إجمالي الحجوزات</div>
+            {selectedDate && (
+              <div className="text-xs text-gray-500 mt-1">
+                {formatDateForDisplay(selectedDate)}
+              </div>
+            )}
+          </div>
           <div className="bg-white rounded-lg shadow-md p-6 text-center border-l-4 border-red-500">
             <div className="text-3xl font-bold text-red-600 mb-2">
               {bookedCount}
             </div>
-            <div className="text-gray-600 font-medium">فصول محجوزة</div>
+            <div className="text-gray-600 font-medium">فصول لها حجوزات</div>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6 text-center border-l-4 border-green-500">
             <div className="text-3xl font-bold text-green-600 mb-2">
               {availableCount}
             </div>
-            <div className="text-gray-600 font-medium">فصول متاحة</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6 text-center border-l-4 border-purple-500">
-            <div className="text-3xl font-bold text-purple-600 mb-2">
-              {Math.round((bookedCount / classesData.length) * 100)}%
-            </div>
-            <div className="text-gray-600 font-medium">نسبة الإشغال</div>
+            <div className="text-gray-600 font-medium">فصول بدون حجوزات</div>
           </div>
         </div>
 
-        {/* جدول الفصول */}
+        {/* جدول الفصول مع حجوزات الطابور */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="bg-blue-600 text-white p-4">
-            <h2 className="text-xl font-bold">الفصول المتاحة للحجز</h2>
+            <h2 className="text-xl font-bold">
+              حجوزات فترة الطابور - {selectedDate ? formatDateForDisplay(selectedDate) : 'يرجى اختيار تاريخ'}
+            </h2>
+            {selectedDate && (
+              <div className="text-sm mt-1 opacity-90">
+                وقت الطابور: 07:00 - 07:30 صباحاً
+              </div>
+            )}
           </div>
 
-          <div className="p-6">
-            {/* الصفوف 5-10 */}
-            <h3 className="text-lg font-bold text-gray-700 mb-4">
-              الصفوف من الخامس إلى العاشر (3 شعب لكل صف)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {classesData.filter(c => c.grade >= 5 && c.grade <= 10).map(classItem => {
-                const booking = isClassBooked(classItem.id)
-                return (
-                  <div
-                    key={classItem.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      booking
-                        ? 'border-red-300 bg-red-50'
-                        : 'border-green-300 bg-green-50 hover:bg-green-100'
-                    }`}
-                    onClick={() => !booking && openBookingModal(classItem.id, classItem.name)}
-                  >
-                    <div className="font-bold text-gray-800 mb-2">
-                      {classItem.name}
+          {selectedDate && isValidSchoolDay(selectedDate) ? (
+            <div className="p-6">
+              {/* الصفوف 5-10 */}
+              <h3 className="text-lg font-bold text-gray-700 mb-4">
+                الصفوف من الخامس إلى العاشر (3 شعب لكل صف)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {classesData.filter(c => c.grade >= 5 && c.grade <= 10).map(classItem => {
+                  const classBookings = getClassBookingsForDate(classItem.id, selectedDate)
+                  const hasBookings = classBookings.length > 0
+                  const isExpanded = showClassBookings[classItem.id]
+                  
+                  return (
+                    <div
+                      key={classItem.id}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        hasBookings
+                          ? 'border-blue-300 bg-blue-50'
+                          : 'border-gray-300 bg-gray-50'
+                      }`}
+                    >
+                      <div 
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => hasBookings && toggleClassBookings(classItem.id)}
+                      >
+                        <div className="font-bold text-gray-800">
+                          {classItem.name}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {hasBookings ? (
+                            <>
+                              <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
+                                {classBookings.length} حجز
+                              </span>
+                              <span className="text-blue-600">
+                                {isExpanded ? '🔽' : '🔼'}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-gray-500 text-sm">لا توجد حجوزات</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* عرض الحجوزات */}
+                      {hasBookings && isExpanded && (
+                        <div className="mt-3 space-y-2 border-t pt-3">
+                          {classBookings.map((booking, index) => (
+                            <div key={booking.key} className="bg-white p-3 rounded border">
+                              <div className="text-sm">
+                                <div className="font-semibold text-blue-700">
+                                  👨‍🏫 {booking.teacher}
+                                </div>
+                                {booking.subject && (
+                                  <div className="text-gray-600">
+                                    📚 المادة: {booking.subject}
+                                  </div>
+                                )}
+                                {booking.reason && (
+                                  <div className="text-gray-600">
+                                    📝 السبب: {booking.reason}
+                                  </div>
+                                )}
+                                {booking.notes && (
+                                  <div className="text-gray-500 text-xs mt-1">
+                                    💬 {booking.notes}
+                                  </div>
+                                )}
+                                {booking.teacherPhone && (
+                                  <div className="text-gray-500 text-xs">
+                                    📞 {booking.teacherPhone}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* زر الحجز الجديد */}
+                      <div className="mt-3 pt-3 border-t">
+                        <button
+                          onClick={() => openBookingModal(classItem.id, classItem.name)}
+                          className="w-full px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                        >
+                          ➕ حجز جديد
+                        </button>
+                      </div>
                     </div>
-                    {booking ? (
-                      <div className="text-sm">
-                        <div className="text-red-600 font-semibold">
-                          ✅ محجوز
-                        </div>
-                        <div className="text-gray-600">
-                          المعلم: {booking.teacher}
-                        </div>
-                        {booking.notes && (
-                          <div className="text-gray-500 text-xs">
-                            {booking.notes}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-green-600 font-semibold text-sm">
-                        🟢 متاح للحجز
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
 
-            {/* الصفوف 11-12 */}
-            <h3 className="text-lg font-bold text-gray-700 mb-4">
-              الصف الحادي عشر والثاني عشر (6 شعب لكل صف)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classesData.filter(c => c.grade >= 11 && c.grade <= 12).map(classItem => {
-                const booking = isClassBooked(classItem.id)
-                return (
-                  <div
-                    key={classItem.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      booking
-                        ? 'border-red-300 bg-red-50'
-                        : 'border-green-300 bg-green-50 hover:bg-green-100'
-                    }`}
-                    onClick={() => !booking && openBookingModal(classItem.id, classItem.name)}
-                  >
-                    <div className="font-bold text-gray-800 mb-2">
-                      {classItem.name}
+              {/* الصفوف 11-12 */}
+              <h3 className="text-lg font-bold text-gray-700 mb-4">
+                الصف الحادي عشر والثاني عشر (6 شعب لكل صف)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {classesData.filter(c => c.grade >= 11 && c.grade <= 12).map(classItem => {
+                  const classBookings = getClassBookingsForDate(classItem.id, selectedDate)
+                  const hasBookings = classBookings.length > 0
+                  const isExpanded = showClassBookings[classItem.id]
+                  
+                  return (
+                    <div
+                      key={classItem.id}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        hasBookings
+                          ? 'border-blue-300 bg-blue-50'
+                          : 'border-gray-300 bg-gray-50'
+                      }`}
+                    >
+                      <div 
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => hasBookings && toggleClassBookings(classItem.id)}
+                      >
+                        <div className="font-bold text-gray-800">
+                          {classItem.name}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {hasBookings ? (
+                            <>
+                              <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
+                                {classBookings.length} حجز
+                              </span>
+                              <span className="text-blue-600">
+                                {isExpanded ? '🔽' : '🔼'}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-gray-500 text-sm">لا توجد حجوزات</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* عرض الحجوزات */}
+                      {hasBookings && isExpanded && (
+                        <div className="mt-3 space-y-2 border-t pt-3">
+                          {classBookings.map((booking, index) => (
+                            <div key={booking.key} className="bg-white p-3 rounded border">
+                              <div className="text-sm">
+                                <div className="font-semibold text-blue-700">
+                                  👨‍🏫 {booking.teacher}
+                                </div>
+                                {booking.subject && (
+                                  <div className="text-gray-600">
+                                    📚 المادة: {booking.subject}
+                                  </div>
+                                )}
+                                {booking.reason && (
+                                  <div className="text-gray-600">
+                                    📝 السبب: {booking.reason}
+                                  </div>
+                                )}
+                                {booking.notes && (
+                                  <div className="text-gray-500 text-xs mt-1">
+                                    💬 {booking.notes}
+                                  </div>
+                                )}
+                                {booking.teacherPhone && (
+                                  <div className="text-gray-500 text-xs">
+                                    📞 {booking.teacherPhone}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* زر الحجز الجديد */}
+                      <div className="mt-3 pt-3 border-t">
+                        <button
+                          onClick={() => openBookingModal(classItem.id, classItem.name)}
+                          className="w-full px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                        >
+                          ➕ حجز جديد
+                        </button>
+                      </div>
                     </div>
-                    {booking ? (
-                      <div className="text-sm">
-                        <div className="text-red-600 font-semibold">
-                          ✅ محجوز
-                        </div>
-                        <div className="text-gray-600">
-                          المعلم: {booking.teacher}
-                        </div>
-                        {booking.notes && (
-                          <div className="text-gray-500 text-xs">
-                            {booking.notes}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-green-600 font-semibold text-sm">
-                        🟢 متاح للحجز
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-8 text-center">
+              {!selectedDate ? (
+                <div className="text-gray-500">
+                  📅 يرجى اختيار تاريخ لعرض حجوزات الطابور
+                </div>
+              ) : !isValidSchoolDay(selectedDate) ? (
+                <div className="text-red-500">
+                  ⚠️ اليوم المختار ليس يوم دراسي
+                  <br />
+                  <span className="text-sm">أيام الدراسة: الأحد - الخميس</span>
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       </main>
 
@@ -532,6 +745,22 @@ export default function AssemblyPage() {
                 disabled
                 className="w-full p-2 border border-gray-300 rounded-md bg-gray-50"
               />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                التاريخ والوقت
+              </label>
+              <div className="p-3 border border-gray-300 rounded-md bg-blue-50">
+                <div className="text-sm">
+                  <div className="font-semibold text-blue-700">
+                    📅 {selectedDate ? formatDateForDisplay(selectedDate) : 'لم يتم اختيار تاريخ'}
+                  </div>
+                  <div className="text-gray-600 mt-1">
+                    🕐 وقت الطابور: 07:00 - 07:30 صباحاً
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* اختيار مكان الحجز */}
