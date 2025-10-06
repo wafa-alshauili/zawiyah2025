@@ -4,7 +4,11 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
 
-// Serverless-compatible in-memory database
+// Persistent Storage System - نظام التخزين الدائم
+const PersistentStorage = require('./PersistentStorage');
+const persistentDB = new PersistentStorage();
+
+// Fallback to in-memory database for compatibility
 const db = require('./db');
 
 const app = express();
@@ -26,6 +30,9 @@ const io = socketIo(server, {
     credentials: true
   }
 });
+
+// جعل Socket.IO متاح globally للنظام الدائم
+global.io = io;
 
 const PORT = process.env.PORT || 10000;
 
@@ -60,21 +67,55 @@ app.use(express.urlencoded({ extended: true }));
 const debugRoutes = require('./routes/debug');
 app.use('/api/debug', debugRoutes);
 
-// Simple API routes
-app.get('/api/classrooms', (req, res) => {
-  const classrooms = db.getClassrooms();
-  res.json({ success: true, data: classrooms });
+// API routes with Persistent Storage Support
+app.get('/api/classrooms', async (req, res) => {
+  try {
+    // محاولة استخدام النظام الدائم أولاً
+    let classrooms = await persistentDB.getAllClassrooms();
+    
+    // إذا فشل، استخدام النظام الاحتياطي
+    if (!classrooms || classrooms.length === 0) {
+      classrooms = db.getClassrooms();
+    }
+    
+    res.json({ success: true, data: classrooms });
+  } catch (error) {
+    console.error('خطأ في جلب القاعات:', error);
+    // fallback to in-memory
+    const classrooms = db.getClassrooms();
+    res.json({ success: true, data: classrooms });
+  }
 });
 
-app.get('/api/bookings', (req, res) => {
-  const bookings = db.getBookings();
-  res.json({ success: true, data: bookings });
+app.get('/api/bookings', async (req, res) => {
+  try {
+    // محاولة استخدام النظام الدائم أولاً
+    let bookings = await persistentDB.getAllBookings();
+    
+    // إذا فشل، استخدام النظام الاحتياطي
+    if (!bookings) {
+      bookings = db.getBookings();
+    }
+    
+    res.json({ success: true, data: bookings });
+  } catch (error) {
+    console.error('خطأ في جلب الحجوزات:', error);
+    // fallback to in-memory
+    const bookings = db.getBookings();
+    res.json({ success: true, data: bookings });
+  }
 });
 
 // Get assembly bookings specifically
-app.get('/api/assembly', (req, res) => {
+app.get('/api/assembly', async (req, res) => {
   try {
-    const allBookings = db.getBookings();
+    // محاولة استخدام النظام الدائم أولاً
+    let allBookings = await persistentDB.getAllBookings();
+    
+    // إذا فشل، استخدام النظام الاحتياطي
+    if (!allBookings) {
+      allBookings = db.getBookings();
+    }
     
     // Filter assembly bookings only
     const assemblyBookings = {};
@@ -93,7 +134,7 @@ app.get('/api/assembly', (req, res) => {
 });
 
 // Search bookings by phone number
-app.get('/api/bookings/search', (req, res) => {
+app.get('/api/bookings/search', async (req, res) => {
   try {
     const { phone } = req.query;
     
@@ -103,9 +144,25 @@ app.get('/api/bookings/search', (req, res) => {
 
     console.log('🔍 البحث عن حجوزات برقم الهاتف:', phone);
     
-    const results = db.searchBookingsByPhone(phone);
+    // محاولة استخدام النظام الدائم أولاً
+    let allBookings = await persistentDB.getAllBookings();
     
-    console.log('✅ نتائج البحث:', results.length, 'حجز');
+    // إذا فشل، استخدام النظام الاحتياطي
+    if (!allBookings) {
+      const results = db.searchBookingsByPhone(phone);
+      console.log('✅ نتائج البحث (احتياطي):', results.length, 'حجز');
+      return res.json({ success: true, data: results });
+    }
+    
+    // البحث في النظام الدائم
+    const results = [];
+    Object.values(allBookings).forEach(booking => {
+      if (booking.teacherPhone && booking.teacherPhone.includes(phone)) {
+        results.push(booking);
+      }
+    });
+    
+    console.log('✅ نتائج البحث (دائم):', results.length, 'حجز');
     res.json({ success: true, data: results });
   } catch (error) {
     console.error('خطأ في البحث عن الحجوزات:', error);
@@ -145,22 +202,38 @@ app.get('/api/stats/dashboard', (req, res) => {
   res.json({ success: true, data: stats });
 });
 
-app.post('/api/bookings', (req, res) => {
+app.post('/api/bookings', async (req, res) => {
   try {
     const { key, booking } = req.body;
-    const success = db.addBooking(key, booking);
+    
+    // إضافة الرقم المرجعي إذا لم يكن موجود
+    if (!booking.referenceNumber && key) {
+      booking.referenceNumber = key;
+    }
+    
+    // محاولة استخدام النظام الدائم أولاً
+    let success = await persistentDB.addBooking(booking);
+    
+    // إذا فشل، استخدام النظام الاحتياطي
+    if (!success) {
+      success = db.addBooking(key, booking);
+    }
+    
     if (success) {
+      console.log('✅ تم حفظ الحجز بنجاح (دائم)');
       res.json({ success: true, data: { key, booking } });
     } else {
+      console.error('❌ فشل في حفظ الحجز');
       res.status(500).json({ success: false, message: 'فشل في حفظ الحجز' });
     }
   } catch (error) {
+    console.error('خطأ في إنشاء الحجز:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
 // Delete booking by reference number
-app.delete('/api/bookings', (req, res) => {
+app.delete('/api/bookings', async (req, res) => {
   try {
     const { referenceNumber } = req.body;
     
@@ -170,10 +243,16 @@ app.delete('/api/bookings', (req, res) => {
 
     console.log('🗑️ طلب حذف حجز برقم مرجعي:', referenceNumber);
     
-    const success = db.deleteBooking(referenceNumber);
+    // محاولة استخدام النظام الدائم أولاً
+    let success = await persistentDB.deleteBooking(referenceNumber);
+    
+    // إذا فشل، استخدام النظام الاحتياطي
+    if (!success) {
+      success = db.deleteBooking(referenceNumber);
+    }
     
     if (success) {
-      console.log('✅ تم حذف الحجز بنجاح');
+      console.log('✅ تم حذف الحجز بنجاح (دائم)');
       res.json({ success: true, message: 'تم حذف الحجز بنجاح' });
     } else {
       res.status(404).json({ success: false, error: 'لم يتم العثور على الحجز' });
@@ -210,10 +289,17 @@ io.on('connection', (socket) => {
   });
 
   // طلب جميع الحجوزات
-  socket.on('get-bookings', () => {
+  socket.on('get-bookings', async () => {
     try {
-      const bookings = db.getBookings();
-      console.log('📋 إرسال الحجوزات للعميل:', Object.keys(bookings).length, 'حجز');
+      // محاولة استخدام النظام الدائم أولاً
+      let bookings = await persistentDB.getAllBookings();
+      
+      // إذا فشل، استخدام النظام الاحتياطي
+      if (!bookings) {
+        bookings = db.getBookings();
+      }
+      
+      console.log('📋 إرسال الحجوزات للعميل (دائم):', Object.keys(bookings).length, 'حجز');
       socket.emit('bookings-updated', { bookings });
     } catch (error) {
       console.error('خطأ في جلب الحجوزات:', error);
@@ -222,12 +308,16 @@ io.on('connection', (socket) => {
   });
 
   // إنشاء حجز جديد
-  socket.on('create-booking', (data) => {
+  socket.on('create-booking', async (data) => {
     try {
       console.log('📝 طلب إنشاء حجز جديد:', data.key, '|', data.booking.teacher);
       
       // التحقق من عدم وجود تضارب في الحجز
-      const existingBookings = db.getBookings();
+      let existingBookings = await persistentDB.getAllBookings();
+      if (!existingBookings) {
+        existingBookings = db.getBookings();
+      }
+      
       if (existingBookings[data.key]) {
         console.log('⚠️ حجز موجود مسبقاً في هذا الوقت');
         socket.emit('booking-error', { 
@@ -236,8 +326,16 @@ io.on('connection', (socket) => {
         return;
       }
       
-      // حفظ الحجز
-      const success = db.addBooking(data.key, data.booking);
+      // إضافة الرقم المرجعي
+      data.booking.referenceNumber = data.key;
+      
+      // حفظ الحجز في النظام الدائم أولاً
+      let success = await persistentDB.addBooking(data.booking);
+      
+      // إذا فشل، استخدام النظام الاحتياطي
+      if (!success) {
+        success = db.addBooking(data.key, data.booking);
+      }
       
       if (success) {
         console.log('✅ تم حفظ الحجز في قاعدة البيانات:', data.key);
@@ -262,11 +360,17 @@ io.on('connection', (socket) => {
   });
 
   // تحديث حجز موجود
-  socket.on('update-booking', (data) => {
+  socket.on('update-booking', async (data) => {
     try {
       console.log('📝 طلب تحديث حجز:', data);
       
-      const success = db.updateBooking(data.key, data.booking);
+      // محاولة استخدام النظام الدائم أولاً
+      let success = await persistentDB.updateBooking(data.key, data.booking);
+      
+      // إذا فشل، استخدام النظام الاحتياطي
+      if (!success) {
+        success = db.updateBooking(data.key, data.booking);
+      }
       
       if (success) {
         // إرسال تأكيد للمرسل
@@ -288,14 +392,20 @@ io.on('connection', (socket) => {
   });
 
   // حذف حجز
-  socket.on('delete-booking', (data) => {
+  socket.on('delete-booking', async (data) => {
     try {
       console.log('🗑️ طلب حذف حجز برقم مرجعي:', data.referenceNumber);
       
-      const success = db.deleteBooking(data.referenceNumber);
+      // محاولة استخدام النظام الدائم أولاً
+      let success = await persistentDB.deleteBooking(data.referenceNumber);
+      
+      // إذا فشل، استخدام النظام الاحتياطي
+      if (!success) {
+        success = db.deleteBooking(data.referenceNumber);
+      }
       
       if (success) {
-        console.log('✅ تم حذف الحجز من قاعدة البيانات:', data.referenceNumber);
+        console.log('✅ تم حذف الحجز من قاعدة البيانات (دائم):', data.referenceNumber);
         
         // إرسال تأكيد للمرسل
         socket.emit('booking-delete-success', { referenceNumber: data.referenceNumber });
@@ -317,9 +427,24 @@ io.on('connection', (socket) => {
   });
 
   // البحث عن حجوزات المعلم بالهاتف
-  socket.on('search-bookings-by-phone', (data) => {
+  socket.on('search-bookings-by-phone', async (data) => {
     try {
-      const bookings = db.searchBookingsByPhone(data.phone);
+      // محاولة استخدام النظام الدائم أولاً
+      let allBookings = await persistentDB.getAllBookings();
+      let bookings = [];
+      
+      if (allBookings) {
+        // البحث في النظام الدائم
+        Object.values(allBookings).forEach(booking => {
+          if (booking.teacherPhone && booking.teacherPhone.includes(data.phone)) {
+            bookings.push(booking);
+          }
+        });
+      } else {
+        // استخدام النظام الاحتياطي
+        bookings = db.searchBookingsByPhone(data.phone);
+      }
+      
       socket.emit('teacher-bookings-found', { 
         phone: data.phone, 
         bookings: bookings 
