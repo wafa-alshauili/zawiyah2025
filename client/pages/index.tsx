@@ -30,6 +30,8 @@ interface BookingItem {
     referenceNumber: string
     createdAt: string
     notes?: string
+    type?: string
+    classroom?: string
   }
 }
 
@@ -110,29 +112,39 @@ export default function Home() {
         booking: booking as BookingItem['booking']
       }))
       
+      // تصفية الحجوزات لتشمل فقط حجوزات اليوم والطابور
+      const filteredBookings = allBookings.filter(item => {
+        const bookingDate = new Date(item.booking.createdAt)
+        const isToday = bookingDate.toDateString() === today.toDateString() || item.booking.day === todayName
+        const isAssembly = item.booking.type === 'assembly' || item.booking.period === 'الطابور' || item.key.includes('assembly-')
+        
+        return isToday || isAssembly
+      })
+      
       // ترتيب الحجوزات من الأحدث إلى الأقدم
-      const sortedBookings = allBookings.sort((a, b) => {
+      const sortedBookings = filteredBookings.sort((a, b) => {
         const dateA = new Date(a.booking.createdAt)
         const dateB = new Date(b.booking.createdAt)
         return dateB.getTime() - dateA.getTime()
       })
       
-      // أحدث 8 حجوزات
-      const recent = sortedBookings.slice(0, 8)
-      setRecentBookings(recent)
+      // حجوزات اليوم (بدون حجوزات الطابور)
+      const todayRegularBookings = sortedBookings.filter(item => {
+        const bookingDate = new Date(item.booking.createdAt)
+        const isToday = bookingDate.toDateString() === today.toDateString() || item.booking.day === todayName
+        const isNotAssembly = !(item.booking.type === 'assembly' || item.booking.period === 'الطابور' || item.key.includes('assembly-'))
+        return isToday && isNotAssembly
+      }).slice(0, 6)
+      setRecentBookings(todayRegularBookings)
       
-      // حجوزات فترة الطابور لليوم
+      // حجوزات فترة الطابور
       const assembly = sortedBookings.filter(item => 
-        item.booking.period === 'الطابور' && item.booking.day === todayName
-      )
+        item.booking.type === 'assembly' || item.booking.period === 'الطابور' || item.key.includes('assembly-')
+      ).slice(0, 6)
       setAssemblyBookings(assembly)
       
-      // عدد حجوزات اليوم
-      const todayBookings = sortedBookings.filter(item => {
-        const bookingDate = new Date(item.booking.createdAt)
-        return bookingDate.toDateString() === today.toDateString() || item.booking.day === todayName
-      })
-      setTodayCount(todayBookings.length)
+      // عدد حجوزات اليوم (شامل الطابور)
+      setTodayCount(sortedBookings.length)
       
     } catch (error) {
       console.error('خطأ في معالجة بيانات الحجوزات:', error)

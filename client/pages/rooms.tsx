@@ -117,10 +117,9 @@ export default function Rooms() {
     }
   }
 
-  // البيانات الافتراضية للقاعات
+  // البيانات الافتراضية للقاعات (محدد بناء على طلب المستخدم)
   const getDefaultClassrooms = (): Classroom[] => {
     const defaultClassrooms: Classroom[] = [
-      // القاعات الخاصة
       {
         id: 1,
         name_ar: 'القاعة الذكية',
@@ -131,55 +130,45 @@ export default function Rooms() {
       },
       {
         id: 2,
-        name_ar: 'قاعة المصادر',
+        name_ar: 'المصادر',
         type: 'resource_center',
         capacity: 25,
-        equipment: ['كمبيوترات', 'طاولات مجموعات'],
+        equipment: ['كمبيوترات', 'طاولات مجموعات', 'كتب مرجعية'],
         isActive: true
       },
       {
         id: 3,
-        name_ar: 'ساحة الطابور القديم',
+        name_ar: 'قاعة التوجيه',
+        type: 'guidance',
+        capacity: 20,
+        equipment: ['مقاعد مريحة', 'مكتب استشاري'],
+        isActive: true
+      },
+      {
+        id: 4,
+        name_ar: 'قاعة حاسوب 1',
+        type: 'computer_lab',
+        capacity: 25,
+        equipment: ['أجهزة كمبيوتر', 'بروجكتر', 'شبكة إنترنت'],
+        isActive: true
+      },
+      {
+        id: 5,
+        name_ar: 'قاعة حاسوب 2',
+        type: 'computer_lab',
+        capacity: 25,
+        equipment: ['أجهزة كمبيوتر', 'بروجكتر', 'شبكة إنترنت'],
+        isActive: true
+      },
+      {
+        id: 6,
+        name_ar: 'الطابور القديم',
         type: 'assembly',
         capacity: 200,
         equipment: ['نظام صوتي', 'منصة'],
         isActive: true
       }
     ]
-    
-    let id = 4
-    
-    // إضافة الصفوف من 5 إلى 10 (3 شعب لكل صف)
-    for (let grade = 5; grade <= 10; grade++) {
-      for (let section = 1; section <= 3; section++) {
-        defaultClassrooms.push({
-          id: id++,
-          name_ar: `الصف ${getGradeText(grade)} - الشعبة ${section}`,
-          type: 'classroom',
-          grade: grade,
-          section: section.toString(),
-          capacity: 30,
-          equipment: ['سبورة', 'مقاعد'],
-          isActive: true
-        })
-      }
-    }
-    
-    // إضافة الصفوف 11 و 12 (6 شعب لكل صف)
-    for (let grade = 11; grade <= 12; grade++) {
-      for (let section = 1; section <= 6; section++) {
-        defaultClassrooms.push({
-          id: id++,
-          name_ar: `الصف ${getGradeText(grade)} - الشعبة ${section}`,
-          type: 'classroom',
-          grade: grade,
-          section: section.toString(),
-          capacity: 30,
-          equipment: ['سبورة', 'مقاعد'],
-          isActive: true
-        })
-      }
-    }
     
     return defaultClassrooms
   }

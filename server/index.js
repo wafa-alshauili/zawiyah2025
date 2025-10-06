@@ -4,7 +4,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
 
-// Simple file-based database
+// Serverless-compatible in-memory database
 const db = require('./db');
 
 const app = express();
@@ -56,6 +56,10 @@ app.get('/', (req, res) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Debug routes
+const debugRoutes = require('./routes/debug');
+app.use('/api/debug', debugRoutes);
+
 // Simple API routes
 app.get('/api/classrooms', (req, res) => {
   const classrooms = db.getClassrooms();
@@ -65,6 +69,48 @@ app.get('/api/classrooms', (req, res) => {
 app.get('/api/bookings', (req, res) => {
   const bookings = db.getBookings();
   res.json({ success: true, data: bookings });
+});
+
+// Get assembly bookings specifically
+app.get('/api/assembly', (req, res) => {
+  try {
+    const allBookings = db.getBookings();
+    
+    // Filter assembly bookings only
+    const assemblyBookings = {};
+    Object.keys(allBookings).forEach(key => {
+      if (key.startsWith('assembly-') || allBookings[key].type === 'assembly') {
+        assemblyBookings[key] = allBookings[key];
+      }
+    });
+    
+    console.log('📋 طلب حجوزات الطابور:', Object.keys(assemblyBookings).length);
+    res.json({ success: true, data: assemblyBookings });
+  } catch (error) {
+    console.error('خطأ في جلب حجوزات الطابور:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Search bookings by phone number
+app.get('/api/bookings/search', (req, res) => {
+  try {
+    const { phone } = req.query;
+    
+    if (!phone) {
+      return res.status(400).json({ success: false, error: 'رقم الهاتف مطلوب' });
+    }
+
+    console.log('🔍 البحث عن حجوزات برقم الهاتف:', phone);
+    
+    const results = db.searchBookingsByPhone(phone);
+    
+    console.log('✅ نتائج البحث:', results.length, 'حجز');
+    res.json({ success: true, data: results });
+  } catch (error) {
+    console.error('خطأ في البحث عن الحجوزات:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 app.get('/api/stats/dashboard', (req, res) => {
