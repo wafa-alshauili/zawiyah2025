@@ -1,0 +1,127 @@
+[
+  {
+    "timestamp": "2025-10-14T09:02:26.880Z",
+    "level": "معلومات",
+    "message": "تم بدء الخادم بنجاح",
+    "data": {
+      "host": "0.0.0.0",
+      "port": "3002",
+      "environment": "development"
+    },
+    "systemInfo": {
+      "memory": {
+        "rss": 55316480,
+        "heapTotal": 17932288,
+        "heapUsed": 11522192,
+        "external": 2398059,
+        "arrayBuffers": 19491
+      },
+      "uptime": 0.5749908,
+      "cpuUsage": {
+        "user": 187000,
+        "system": 171000
+      },
+      "version": "v22.20.0"
+    }
+  },
+  {
+    "timestamp": "2025-10-14T09:01:46.585Z",
+    "level": "معلومات",
+    "message": "بدء تشغيل خادم زاوية 2025",
+    "data": {
+      "port": "3001",
+      "environment": "development",
+      "corsOrigins": 5
+    },
+    "systemInfo": {
+      "memory": {
+        "rss": 53637120,
+        "heapTotal": 17932288,
+        "heapUsed": 11116968,
+        "external": 2268174,
+        "arrayBuffers": 19275
+      },
+      "uptime": 0.4354344,
+      "cpuUsage": {
+        "user": 187000,
+        "system": 171000
+      },
+      "version": "v22.20.0"
+    }
+  },
+  {
+    "timestamp": "2025-10-14T09:00:46.360Z",
+    "level": "معلومات",
+    "message": "إيقاف الخادم",
+    "data": {
+      "reason": "SIGINT"
+    },
+    "systemInfo": {
+      "memory": {
+        "rss": 45334528,
+        "heapTotal": 11116544,
+        "heapUsed": 9595256,
+        "external": 2397219,
+        "arrayBuffers": 18651
+      },
+      "uptime": 27.8279159,
+      "cpuUsage": {
+        "user": 468000,
+        "system": 171000
+      },
+      "version": "v22.20.0"
+    }
+  },
+  {
+    "timestamp": "2025-10-14T09:00:19.001Z",
+    "level": "معلومات",
+    "message": "بدء تشغيل خادم زاوية 2025",
+    "data": {
+      "port": "3001",
+      "environment": "development",
+      "corsOrigins": 5
+    },
+    "systemInfo": {
+      "memory": {
+        "rss": 47353856,
+        "heapTotal": 17932288,
+        "heapUsed": 11171760,
+        "external": 2268174,
+        "arrayBuffers": 19275
+      },
+      "uptime": 0.4710483,
+      "cpuUsage": {
+        "user": 375000,
+        "system": 125000
+      },
+      "version": "v22.20.0"
+    }
+  },
+  {
+    "timestamp": "2025-10-06T13:31:49.701Z",
+    "level": "معلومات",
+    "message": "بدء تشغيل خادم زاوية 2025",
+    "data": {
+      "port": "3001",
+      "environment": "development",
+      "corsOrigins": 4
+    },
+    "systemInfo": {
+      "memory": {
+        "rss": 54231040,
+        "heapTotal": 18120704,
+        "heapUsed": 12151040,
+        "external": 2312898,
+        "arrayBuffers": 17435
+      },
+      "uptime": 0.2703872,
+      "cpuUsage": {
+        "user": 265000,
+        "system": 31000
+      },
+      "version": "v22.14.0"
+    }
+  }
+]
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "students": {
+    "default": {
+      "name": "نظام الطلاب",
+      "grade": "عام",
+      "section": "جميع الشعب",
+      "active": true
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-10-06T09:00:00.000Z",
+    "totalStudents": 1
+  }
+}

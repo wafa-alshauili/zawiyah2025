@@ -1,0 +1,191 @@
+{
+  "timestamp": "2025-10-06T09:00:47.341Z",
+  "reportId": "HEALTH-1759741247341-Q7H6",
+  "systemInfo": {
+    "nodeVersion": "v22.14.0",
+    "platform": "win32",
+    "architecture": "x64",
+    "uptime": 0,
+    "environment": "development",
+    "pid": 30908,
+    "cwd": "C:\\Users\\وفاء الشعيلي\\Desktop\\Zawiyah2025",
+    "timestamp": "2025-10-06T09:00:47.341Z"
+  },
+  "componentChecks": {
+    "ملفات البيانات الثابتة": {
+      "status": "تحذير",
+      "message": "ملفات مفقودة: students.json",
+      "healthy": false,
+      "details": {
+        "missingFiles": [
+          "students.json"
+        ],
+        "existingFiles": [
+          "backups",
+          "bookings.json",
+          "classrooms.json",
+          "health_reports",
+          "recovery_report.json",
+          "system_logs.json",
+          "timeslots.json"
+        ]
+      }
+    },
+    "نظام Socket.IO": {
+      "status": "سليم",
+      "message": "نظام Socket.IO جاهز للاتصالات",
+      "healthy": true,
+      "details": {
+        "activeConnections": 0,
+        "lastConnection": null
+      }
+    },
+    "خدمة الحجوزات": {
+      "status": "سليم",
+      "message": "خدمة الحجوزات تعمل بطريقة طبيعية",
+      "healthy": true,
+      "details": {
+        "totalBookings": 9,
+        "todayBookings": 5,
+        "lastBooking": {
+          "id": "regular-5-1-2025-09-26-الحصة-الرابعة",
+          "type": "regular",
+          "classroom": "القاعة الذكية",
+          "teacher": "حليمة",
+          "phone": "",
+          "subject": "حاسوب",
+          "grade": "5",
+          "date": "2025-09-26",
+          "timeSlot": "الحصة الرابعة",
+          "notes": "",
+          "createdAt": "2025-09-26T20:23:02.809Z",
+          "referenceNumber": "MIG-1759740417719-BX4DPD",
+          "_migrated": {
+            "originalKey": "room-day-period-1",
+            "originalFormat": "old_format",
+            "migratedAt": "2025-10-06T08:46:57.719Z"
+          }
+        }
+      }
+    },
+    "نظام النسخ الاحتياطي": {
+      "status": "سليم",
+      "message": "نظام النسخ الاحتياطي يعمل بطريقة طبيعية",
+      "healthy": true,
+      "details": {
+        "totalBackups": 19,
+        "recentBackups": 15,
+        "lastBackup": "timeslots_backup_2025-10-06T08-57-40-187Z.json"
+      }
+    },
+    "مراقب فقدان البيانات": {
+      "status": "سليم",
+      "message": "مراقب فقدان البيانات مفعل ويعمل",
+      "healthy": true,
+      "details": {
+        "monitorFile": "موجود",
+        "checkInterval": "30 ثانية",
+        "lastCheck": "2025-10-06T09:00:47.345Z"
+      }
+    },
+    "نظام الطوارئ": {
+      "status": "سليم",
+      "message": "نظام الطوارئ جاهز للاستخدام",
+      "healthy": true,
+      "details": {
+        "recoveryFile": "موجود",
+        "backupSources": "متعددة",
+        "autoRecovery": "مفعل"
+      }
+    }
+  },
+  "memoryCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "استخدام الذاكرة: 10 MB",
+    "details": {
+      "heapUsed": 10,
+      "heapTotal": 18,
+      "external": 2,
+      "rss": 49,
+      "usage": 57
+    }
+  },
+  "diskCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "مساحة البيانات: 0 MB",
+    "details": {
+      "dataDirectorySize": 0,
+      "lastModified": "2025-10-06T08:59:37.693Z"
+    }
+  },
+  "performanceCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "متوسط زمن الاستجابة: 1 ms",
+    "details": {
+      "totalDuration": 1,
+      "averageDuration": 1,
+      "tests": [
+        {
+          "operation": "قراءة ملف الحجوزات",
+          "duration": 1,
+          "success": true
+        },
+        {
+          "operation": "معالجة JSON",
+          "duration": 0,
+          "success": true
+        }
+      ],
+      "cpuUsage": {
+        "user": 187000,
+        "system": 156000
+      }
+    }
+  },
+  "dataIntegrityCheck": {
+    "status": "خطأ",
+    "healthy": false,
+    "message": "فشل في فحص سلامة البيانات",
+    "error": "ENOENT: no such file or directory, open 'C:\\Users\\وفاء الشعيلي\\Desktop\\Zawiyah2025\\server\\persistent-data\\students.json'"
+  },
+  "networkCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "اتصال الشبكة مستقر",
+    "details": {
+      "localConnections": "متاحة",
+      "socketConnections": "جاهزة",
+      "lastCheck": "2025-10-06T09:00:47.360Z"
+    }
+  },
+  "securityCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "لا توجد مشاكل أمنية واضحة",
+    "details": {
+      "issues": [],
+      "environment": "development",
+      "lastCheck": "2025-10-06T09:00:47.361Z"
+    }
+  },
+  "recommendations": [
+    "إعادة إنشاء الملفات المفقودة من النسخ الاحتياطية",
+    "تنظيف البيانات المكررة أو التالفة",
+    "إجراء نسخة احتياطية قبل أي تعديل"
+  ],
+  "overallHealth": {
+    "status": "جيد",
+    "score": 4,
+    "healthPercentage": 83,
+    "healthyComponents": 5,
+    "totalComponents": 6,
+    "issues": [
+      "ملفات مفقودة: students.json",
+      "فشل في فحص سلامة البيانات"
+    ]
+  },
+  "checkDuration": 20
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ERR-1760432506611-PQ5BWN",
+    "timestamp": "2025-10-14T09:01:46.611Z",
+    "level": "CRITICAL",
+    "category": "غير معروف",
+    "message": "Uncaught Exception",
+    "error": {
+      "name": "Error",
+      "message": "listen EADDRINUSE: address already in use 0.0.0.0:3001",
+      "stack": "Error: listen EADDRINUSE: address already in use 0.0.0.0:3001\n    at Server.setupListenHandle [as _listen2] (node:net:1940:16)\n    at listenInCluster (node:net:1997:12)\n    at node:net:2206:7\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)",
+      "code": "EADDRINUSE"
+    },
+    "additionalData": {},
+    "environment": "development",
+    "nodeVersion": "v22.20.0",
+    "platform": "win32",
+    "memory": {
+      "rss": 54898688,
+      "heapTotal": 17932288,
+      "heapUsed": 11555456,
+      "external": 2398059,
+      "arrayBuffers": 19491
+    },
+    "uptime": 0.4604466
+  },
+  {
+    "id": "ERR-1760278129684-PO8ELU",
+    "timestamp": "2025-10-12T14:08:49.684Z",
+    "level": "CRITICAL",
+    "category": "غير معروف",
+    "message": "Uncaught Exception",
+    "error": {
+      "name": "Error",
+      "message": "EPIPE: broken pipe, write",
+      "stack": "Error: EPIPE: broken pipe, write\n    at Socket._write (node:internal/net:63:18)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.log (node:internal/console/constructor:384:26)\n    at PersistentStorage.cleanOldBackups (C:\\Users\\وفاء الشعيلي\\Desktop\\Zawiyah2025\\server\\PersistentStorage.js:146:19)\n    at async PersistentStorage.createBackup (C:\\Users\\وفاء الشعيلي\\Desktop\\Zawiyah2025\\server\\PersistentStorage.js:113:7)\n    at async PersistentStorage.forceSyncAll (C:\\Users\\وفاء الشعيلي\\Desktop\\Zawiyah2025\\server\\PersistentStorage.js:298:11)\n    at async Timeout._onTimeout (C:\\Users\\وفاء الشعيلي\\Desktop\\Zawiyah2025\\server\\PersistentStorage.js:164:7)",
+      "code": "EPIPE"
+    },
+    "additionalData": {},
+    "environment": "development",
+    "nodeVersion": "v22.14.0",
+    "platform": "win32",
+    "memory": {
+      "rss": 11444224,
+      "heapTotal": 12091392,
+      "heapUsed": 10496232,
+      "external": 2471630,
+      "arrayBuffers": 144383
+    },
+    "uptime": 520631.957964
+  }
+]

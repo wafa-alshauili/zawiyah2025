@@ -15,13 +15,13 @@ class SocketService {
       } else if (typeof window !== 'undefined') {
         const hostname = window.location.hostname;
         if (hostname === 'localhost' || hostname.startsWith('192.168')) {
-          serverPath = `http://${hostname}:3001`;
+          serverPath = `http://${hostname}:3002`;
         } else {
           // للنشر على الإنترنت - Render server
           serverPath = 'https://zawiyah2025.onrender.com';
         }
       } else {
-        serverPath = 'http://localhost:3001';
+        serverPath = 'http://localhost:3002';
       }
     }
     // إذا كان لدينا socket متصل، استخدمه

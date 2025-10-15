@@ -1,0 +1,84 @@
+[
+  {
+    "id": 1,
+    "slot_number": 1,
+    "name_ar": "الحصة الأولى",
+    "start_time": "07:30",
+    "end_time": "08:15",
+    "order": 1
+  },
+  {
+    "id": 2,
+    "slot_number": 2,
+    "name_ar": "الحصة الثانية",
+    "start_time": "08:15",
+    "end_time": "09:00",
+    "order": 2
+  },
+  {
+    "id": 3,
+    "slot_number": 3,
+    "name_ar": "الحصة الثالثة",
+    "start_time": "09:00",
+    "end_time": "09:45",
+    "order": 3
+  },
+  {
+    "id": 4,
+    "slot_number": 4,
+    "name_ar": "الحصة الرابعة",
+    "start_time": "09:45",
+    "end_time": "10:30",
+    "order": 4
+  },
+  {
+    "id": 5,
+    "slot_number": 5,
+    "name_ar": "الحصة الخامسة",
+    "start_time": "11:00",
+    "end_time": "11:45",
+    "order": 6
+  },
+  {
+    "id": 6,
+    "slot_number": 6,
+    "name_ar": "الحصة السادسة",
+    "start_time": "11:45",
+    "end_time": "12:30",
+    "order": 7
+  },
+  {
+    "id": 7,
+    "slot_number": 7,
+    "name_ar": "الحصة السابعة",
+    "start_time": "12:30",
+    "end_time": "13:15",
+    "order": 8
+  },
+  {
+    "id": 8,
+    "slot_number": 8,
+    "name_ar": "الحصة الثامنة",
+    "start_time": "13:15",
+    "end_time": "14:00",
+    "order": 9
+  },
+  {
+    "id": 9,
+    "slot_number": 9,
+    "name_ar": "الطابور",
+    "start_time": "07:00",
+    "end_time": "07:30",
+    "type": "assembly",
+    "order": 0
+  },
+  {
+    "id": 10,
+    "slot_number": 10,
+    "name_ar": "النشاط",
+    "start_time": "10:30",
+    "end_time": "11:00",
+    "type": "activity",
+    "order": 5
+  }
+]

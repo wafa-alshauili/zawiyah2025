@@ -1,0 +1,34 @@
+[
+  {
+    "timestamp": "2025-10-06T09:04:09.800Z",
+    "operation": "GET /api/diagnostics?id=3c502bcf-2b7d-4336-baa8-f314e304e96a&vscodeBrowserReqId=1759741449705",
+    "duration": 75,
+    "success": true,
+    "additionalData": {
+      "statusCode": 200,
+      "method": "GET",
+      "url": "/api/diagnostics?id=3c502bcf-2b7d-4336-baa8-f314e304e96a&vscodeBrowserReqId=1759741449705"
+    },
+    "memory": 10397776,
+    "cpuUsage": {
+      "user": 500000,
+      "system": 234000
+    }
+  },
+  {
+    "timestamp": "2025-10-06T09:03:54.854Z",
+    "operation": "GET /api/health?id=3c502bcf-2b7d-4336-baa8-f314e304e96a&vscodeBrowserReqId=1759741434448",
+    "duration": 35,
+    "success": true,
+    "additionalData": {
+      "statusCode": 200,
+      "method": "GET",
+      "url": "/api/health?id=3c502bcf-2b7d-4336-baa8-f314e304e96a&vscodeBrowserReqId=1759741434448"
+    },
+    "memory": 10138656,
+    "cpuUsage": {
+      "user": 390000,
+      "system": 187000
+    }
+  }
+]

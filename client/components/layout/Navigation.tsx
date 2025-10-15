@@ -19,7 +19,7 @@ const Navigation = () => {
     { name: 'الحجوزات', href: '/bookings', icon: FaCalendarAlt },
     { name: 'حجز الطابور', href: '/assembly', icon: FaBars },
     { name: 'القاعات', href: '/rooms', icon: FaDoorOpen },
-    { name: 'الإحصائيات الشاملة', href: '/statistics', icon: FaChartBar },
+    { name: 'الإحصائيات', href: '/statistics', icon: FaChartBar },
   ]
 
   const isActive = (path: string) => router.pathname === path

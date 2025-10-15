@@ -11,6 +11,10 @@ const persistentDB = new PersistentStorage();
 // Data Loss Prevention System - نظام منع فقدان البيانات
 const dataLossPrevention = require('./dataLossPrevention');
 
+// Error Monitoring and Health Check Systems - أنظمة مراقبة الأخطاء وفحص الصحة
+const errorMonitor = require('./errorMonitoring');
+const healthChecker = require('./healthCheck');
+
 // Fallback to in-memory database for compatibility
 const db = require('./db');
 
@@ -45,14 +49,88 @@ app.use(cors({
   credentials: true
 }));
 
+// Add Error Monitoring and Performance Monitoring Middleware
+app.use(errorMonitor.performanceMonitor());
+
 // Health check endpoint for Render
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    message: 'Zawiyah Server is running',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    // إجراء فحص سريع للصحة
+    const quickCheck = await healthChecker.quickHealthCheck();
+    
+    res.json({ 
+      status: quickCheck.healthy ? 'healthy' : 'warning',
+      message: quickCheck.healthy ? 'Zawiyah Server is running perfectly' : 'Zawiyah Server has some issues',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      healthScore: `${quickCheck.score}/${quickCheck.total}`,
+      details: quickCheck.checks
+    });
+  } catch (error) {
+    await errorMonitor.logError('ERROR', 'NETWORK', 'Health check failed', error);
+    res.status(500).json({ 
+      status: 'unhealthy', 
+      message: 'Health check failed',
+      error: error.message
+    });
+  }
+});
+
+// System diagnostics endpoint - نقطة نهاية التشخيص
+app.get('/api/diagnostics', async (req, res) => {
+  try {
+    const fullReport = await healthChecker.performFullHealthCheck();
+    res.json({
+      success: true,
+      report: fullReport
+    });
+  } catch (error) {
+    await errorMonitor.logError('ERROR', 'DIAGNOSTICS', 'Failed to generate diagnostics', error);
+    res.status(500).json({
+      success: false,
+      message: 'فشل في إنشاء تقرير التشخيص',
+      error: error.message
+    });
+  }
+});
+
+// Error logs endpoint - نقطة نهاية سجلات الأخطاء
+app.get('/api/error-logs', async (req, res) => {
+  try {
+    const hours = parseInt(req.query.hours) || 24;
+    const logs = await errorMonitor.getRecentErrorLogs(hours * 60); // convert to minutes
+    res.json({
+      success: true,
+      logs,
+      period: `آخر ${hours} ساعة`
+    });
+  } catch (error) {
+    await errorMonitor.logError('ERROR', 'NETWORK', 'Failed to fetch error logs', error);
+    res.status(500).json({
+      success: false,
+      message: 'فشل في جلب سجلات الأخطاء',
+      error: error.message
+    });
+  }
+});
+
+// Error report endpoint - نقطة نهاية تقرير الأخطاء
+app.get('/api/error-report', async (req, res) => {
+  try {
+    const hours = parseInt(req.query.hours) || 24;
+    const report = await errorMonitor.generateErrorReport(hours);
+    res.json({
+      success: true,
+      report
+    });
+  } catch (error) {
+    await errorMonitor.logError('ERROR', 'NETWORK', 'Failed to generate error report', error);
+    res.status(500).json({
+      success: false,
+      message: 'فشل في إنشاء تقرير الأخطاء',
+      error: error.message
+    });
+  }
 });
 
 // Root endpoint
@@ -482,21 +560,79 @@ io.on('connection', (socket) => {
   });
 });
 
+// Add Express Error Handler - إضافة معالج أخطاء Express
+app.use(errorMonitor.expressErrorHandler());
+
 // Database is initialized automatically via db.js
 console.log('تم تهيئة قاعدة البيانات المحلية بنجاح');
+
+// تسجيل بدء الخادم
+errorMonitor.logSystemInfo('INFO', 'بدء تشغيل خادم زاوية 2025', {
+  port: PORT,
+  environment: process.env.NODE_ENV || 'development',
+  corsOrigins: allowedOrigins.length
+});
 
 // Start server
 const HOST = process.env.HOST || '0.0.0.0'
 
-server.listen(PORT, HOST, () => {
+server.listen(PORT, HOST, async () => {
   console.log(`🚀 خادم زاوية 2025 يعمل على المنفذ ${PORT}`);
   console.log(`📱 الواجهة المحلية: http://localhost:3000`);
   console.log(`🌐 الواجهة على الشبكة: http://192.168.1.14:3000`);
   console.log(`🔗 API محلي: http://localhost:${PORT}/api`);
   console.log(`🔗 API على الشبكة: http://192.168.1.14:${PORT}/api`);
+  console.log('🏥 فحص الصحة: http://localhost:' + PORT + '/api/health');
+  console.log('🚨 التشخيص: http://localhost:' + PORT + '/api/diagnostics');
+  console.log('📊 سجلات الأخطاء: http://localhost:' + PORT + '/api/error-logs');
   console.log('');
   console.log('📋 للاختبار على أجهزة أخرى:');
   console.log('   1. تأكد أن الأجهزة متصلة بنفس شبكة الواي فاي');
   console.log('   2. افتح المتصفح واذهب إلى: http://192.168.1.14:3000');
   console.log('   3. اختبر إنشاء حجز ومراقبة التزامن الفوري');
+  
+  // تسجيل نجاح بدء الخادم
+  await errorMonitor.logSystemInfo('INFO', 'تم بدء الخادم بنجاح', {
+    host: HOST,
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development'
+  });
+
+  // إجراء فحص صحة أولي
+  try {
+    console.log('\n🏥 إجراء فحص صحة أولي...');
+    const healthReport = await healthChecker.performFullHealthCheck();
+    
+    if (healthReport.overallHealth.score >= 4) {
+      console.log('✅ النظام في حالة ممتازة وجاهز للعمل!');
+    } else if (healthReport.overallHealth.score >= 3) {
+      console.log('⚠️ النظام يعمل بحالة جيدة مع بعض التحذيرات');
+    } else {
+      console.log('🚨 النظام يحتاج إلى انتباه - يرجى مراجعة التقرير');
+    }
+  } catch (error) {
+    await errorMonitor.logError('WARNING', 'SYSTEM', 'فشل في فحص الصحة الأولي', error);
+    console.log('⚠️ تم تخطي فحص الصحة الأولي');
+  }
+});
+
+// Handle server shutdown gracefully
+process.on('SIGTERM', async () => {
+  console.log('🛑 تلقي إشارة إيقاف الخادم...');
+  await errorMonitor.logSystemInfo('INFO', 'إيقاف الخادم', { reason: 'SIGTERM' });
+  
+  server.close(() => {
+    console.log('✅ تم إيقاف الخادم بنجاح');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', async () => {
+  console.log('🛑 تلقي إشارة مقاطعة (Ctrl+C)...');
+  await errorMonitor.logSystemInfo('INFO', 'إيقاف الخادم', { reason: 'SIGINT' });
+  
+  server.close(() => {
+    console.log('✅ تم إيقاف الخادم بنجاح');
+    process.exit(0);
+  });
 });

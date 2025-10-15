@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
 import Navigation from '../components/layout/Navigation'
 import Footer from '../components/layout/Footer'
 import LiveClock from '../components/LiveClock'
+import FirebaseDashboard from '../components/FirebaseDashboard'
+import { useZawiyahApp } from '../hooks/useFirebase'
 import socketService from '../services/socket'
 import { 
   FaCalendarCheck, 
@@ -12,452 +13,395 @@ import {
   FaArrowRight,
   FaClock,
   FaPhoneAlt,
-  FaBook
+  FaBook,
+  FaFireAlt
 } from 'react-icons/fa'
 import Link from 'next/link'
 
-interface BookingItem {
-  key: string
-  booking: {
-    teacher: string
-    phone: string
-    room: string
-    day: string
-    period: string
-    subject: string
-    grade: string
-    section: string
-    referenceNumber: string
-    createdAt: string
-    notes?: string
-    type?: string
-    classroom?: string
-  }
-}
-
-export default function Home() {
-  const router = useRouter()
-  const [recentBookings, setRecentBookings] = useState<BookingItem[]>([])
-  const [assemblyBookings, setAssemblyBookings] = useState<BookingItem[]>([])
-  const [todayCount, setTodayCount] = useState(0)
+export default function HomePage() {
+  const [isClient, setIsClient] = useState(false)
+  const [useFirebase, setUseFirebase] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    todayBookings: 0,
+    availableRooms: 24,
+    activeTeachers: 0,
+    activeBookings: 0
+  })
+
+  // استخدام Firebase Hook
+  const {
+    appReady,
+    initError,
+    bookingsToday,
+    stats: firebaseStats,
+    connection
+  } = useZawiyahApp()
 
   useEffect(() => {
-    fetchData()
+    setIsClient(true)
     
-    // الاتصال بالخادم
-    socketService.connect()
+    // فحص إعدادات المستخدم
+    const firebaseEnabled = localStorage.getItem('useFirebase') === 'true'
+    setUseFirebase(firebaseEnabled)
     
-    // تحديث البيانات عند تحديث الحجوزات
-    socketService.on('bookings-updated', (data) => {
-      console.log('🏠 الصفحة الرئيسية: تحديث شامل للحجوزات -', Object.keys(data.bookings || {}).length, 'حجز')
-      // تحديث localStorage فقط عند وصول بيانات جديدة
-      if (data.bookings) {
-        try {
-          localStorage.setItem('zawiyah-bookings', JSON.stringify(data.bookings))
-          console.log('💾 تم تحديث localStorage ببيانات الخادم')
-        } catch (error) {
-          console.error('خطأ في حفظ localStorage:', error)
-        }
-      }
-      // استخدام البيانات الجديدة مباشرة
-      processBookingsData(data.bookings || {})
-    })
-    
-    socketService.on('booking-created', (data) => {
-      console.log('🏠 الصفحة الرئيسية: حجز جديد -', data.booking.teacher)
-      // تحديث سريع بدون إعادة قراءة localStorage
-      fetchDataFromCurrentState()
-    })
-    
-    socketService.on('booking-deleted', (data) => {
-      console.log('🏠 الصفحة الرئيسية: تم حذف حجز -', data.referenceNumber)
-      // تحديث سريع بدون إعادة قراءة localStorage
-      fetchDataFromCurrentState()
-    })
-    
-    // مراقبة تغييرات localStorage من تبويبات أخرى
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'zawiyah-bookings' && e.newValue) {
-        try {
-          console.log('🏠 تحديث من تبويب آخر - تزامن البيانات')
-          const newBookings = JSON.parse(e.newValue)
-          processBookingsData(newBookings)
-        } catch (error) {
-          console.error('خطأ في تحليل البيانات من التبويب الآخر:', error)
-        }
-      }
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    
-    return () => {
-      // تنظيف مستمع التخزين
-      window.removeEventListener('storage', handleStorageChange)
-      
-      // عدم قطع الاتصال - دع الصفحات الأخرى تستخدم نفس الاتصال
-      console.log('🏠 مغادرة الصفحة الرئيسية - الاتصال يبقى مفتوحاً')
+    if (firebaseEnabled) {
+      // استخدام Firebase
+      console.log('🔥 استخدام نظام Firebase')
+    } else {
+      // استخدام النظام التقليدي
+      console.log('📡 استخدام النظام التقليدي')
+      initTraditionalSystem()
     }
   }, [])
 
-  // دالة لمعالجة البيانات من مصدر محدد
-  const processBookingsData = (bookingsData: any) => {
-    try {
-      const today = new Date()
-      const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
-      const todayName = dayNames[today.getDay()]
-      
-      const allBookings = Object.entries(bookingsData).map(([key, booking]: [string, any]) => ({ 
-        key, 
-        booking: booking as BookingItem['booking']
-      }))
-      
-      // تصفية الحجوزات لتشمل فقط حجوزات اليوم والطابور
-      const filteredBookings = allBookings.filter(item => {
-        const bookingDate = new Date(item.booking.createdAt)
-        const isToday = bookingDate.toDateString() === today.toDateString() || item.booking.day === todayName
-        const isAssembly = item.booking.type === 'assembly' || item.booking.period === 'الطابور' || item.key.includes('assembly-')
-        
-        return isToday || isAssembly
-      })
-      
-      // ترتيب الحجوزات من الأحدث إلى الأقدم
-      const sortedBookings = filteredBookings.sort((a, b) => {
-        const dateA = new Date(a.booking.createdAt)
-        const dateB = new Date(b.booking.createdAt)
-        return dateB.getTime() - dateA.getTime()
-      })
-      
-      // حجوزات اليوم (بدون حجوزات الطابور)
-      const todayRegularBookings = sortedBookings.filter(item => {
-        const bookingDate = new Date(item.booking.createdAt)
-        const isToday = bookingDate.toDateString() === today.toDateString() || item.booking.day === todayName
-        const isNotAssembly = !(item.booking.type === 'assembly' || item.booking.period === 'الطابور' || item.key.includes('assembly-'))
-        return isToday && isNotAssembly
-      }).slice(0, 6)
-      setRecentBookings(todayRegularBookings)
-      
-      // حجوزات فترة الطابور
-      const assembly = sortedBookings.filter(item => 
-        item.booking.type === 'assembly' || item.booking.period === 'الطابور' || item.key.includes('assembly-')
-      ).slice(0, 6)
-      setAssemblyBookings(assembly)
-      
-      // عدد حجوزات اليوم (شامل الطابور)
-      setTodayCount(sortedBookings.length)
-      
-    } catch (error) {
-      console.error('خطأ في معالجة بيانات الحجوزات:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // دالة تحديث سريعة بدون إعادة قراءة localStorage
-  const fetchDataFromCurrentState = () => {
-    try {
-      const bookingsData = localStorage.getItem('zawiyah-bookings')
-      const bookings = bookingsData ? JSON.parse(bookingsData) : {}
-      processBookingsData(bookings)
-    } catch (error) {
-      console.error('خطأ في التحديث السريع:', error)
-    }
-  }
-
-  // دالة التحميل الأولية من localStorage
-  const fetchData = () => {
-    try {
-      console.log('📂 تحميل أولي من localStorage')
-      const bookingsData = localStorage.getItem('zawiyah-bookings')
-      const bookings = bookingsData ? JSON.parse(bookingsData) : {}
-      processBookingsData(bookings)
-    } catch (error) {
-      console.error('خطأ في جلب البيانات:', error)
-      setLoading(false)
-    }
-  }
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('ar-SA', { 
-      hour: '2-digit', 
-      minute: '2-digit'
-    })
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ar-SA')
-  }
-
-  // وظيفة الانتقال لصفحة الحجوزات مع التمرير للحجز المحدد
-  const navigateToBooking = (booking: BookingItem['booking']) => {
-    // حفظ معلومات الحجز في sessionStorage للعثور عليه
-    sessionStorage.setItem('highlightBooking', JSON.stringify({
-      room: booking.room,
-      day: booking.day,
-      period: booking.period,
-      teacher: booking.teacher
-    }))
+  // تهيئة النظام التقليدي
+  const initTraditionalSystem = () => {
+    socketService.connect()
     
-    // الانتقال لصفحة الحجوزات
-    router.push('/bookings')
+    socketService.on('bookings-updated', (data) => {
+      const bookings = Object.values(data.bookings || {})
+      const today = new Date().toISOString().split('T')[0]
+      const todayBookings = bookings.filter((b: any) => 
+        b.date === today || b.createdAt?.startsWith(today)
+      )
+      
+      setStats(prev => ({
+        ...prev,
+        todayBookings: todayBookings.length,
+        activeBookings: bookings.filter((b: any) => b.status !== 'cancelled').length,
+        activeTeachers: new Set(bookings.map((b: any) => b.teacher || b.teacher_name)).size
+      }))
+      setLoading(false)
+    })
+    
+    // تحميل البيانات المحلية
+    loadLocalStats()
   }
 
-  if (loading) {
+  const loadLocalStats = () => {
+    try {
+      const storedBookings = localStorage.getItem('zawiyah-bookings')
+      if (storedBookings) {
+        const bookings = Object.values(JSON.parse(storedBookings))
+        const today = new Date().toISOString().split('T')[0]
+        const todayBookings = bookings.filter((b: any) => 
+          b.date === today || b.createdAt?.startsWith(today)
+        )
+        
+        setStats(prev => ({
+          ...prev,
+          todayBookings: todayBookings.length,
+          activeBookings: bookings.filter((b: any) => b.status !== 'cancelled').length,
+          activeTeachers: new Set(bookings.map((b: any) => b.teacher || b.teacher_name)).size
+        }))
+      }
+      setLoading(false)
+    } catch (error) {
+      console.error('خطأ في تحميل البيانات المحلية:', error)
+      setLoading(false)
+    }
+  }
+
+  // تحديث إحصائيات Firebase
+  useEffect(() => {
+    if (useFirebase && firebaseStats) {
+      setStats({
+        todayBookings: firebaseStats.stats.totalBookings || 0,
+        availableRooms: 24,
+        activeTeachers: firebaseStats.stats.teachersCount || 0,
+        activeBookings: firebaseStats.stats.activeBookings || 0
+      })
+      setLoading(false)
+    }
+  }, [useFirebase, firebaseStats])
+
+  const toggleFirebase = () => {
+    const newValue = !useFirebase
+    setUseFirebase(newValue)
+    localStorage.setItem('useFirebase', newValue.toString())
+    window.location.reload()
+  }
+
+  if (!isClient) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-cairo">جاري التحميل...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">جاري التحميل...</p>
         </div>
       </div>
     )
   }
 
+  // إذا كان Firebase مفعل ولكن هناك خطأ
+  if (useFirebase && initError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50">
+        <Navigation />
+        
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-8">
+              <div className="text-center">
+                <div className="text-6xl mb-4">⚠️</div>
+                <h1 className="text-2xl font-bold text-red-800 mb-4">
+                  خطأ في تهيئة Firebase
+                </h1>
+                <p className="text-red-700 mb-6">{initError}</p>
+                
+                <div className="space-y-4">
+                  <button 
+                    onClick={() => {
+                      localStorage.removeItem('useFirebase')
+                      window.location.reload()
+                    }}
+                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    العودة للنظام التقليدي
+                  </button>
+                  
+                  <div>
+                    <a 
+                      href="/FIREBASE_SETUP_GUIDE.md" 
+                      className="text-red-600 hover:text-red-700 underline"
+                      target="_blank"
+                    >
+                      مراجعة دليل إعداد Firebase
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    )
+  }
+
+  const today = new Date()
+  const todayDateString = today.toLocaleDateString('ar-SA', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 rtl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-indigo-900 font-cairo mb-4">
-            🏫 زاوية 2025
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-gray-800 mb-4">
+            مرحباً بك في زاوية 2025
           </h1>
-          <p className="text-xl text-gray-700 font-cairo mb-4">
-            مدرسة بسياء للتعليم الأساسي (5-12) - نظام حجز القاعات الدراسية
+          <p className="text-xl text-gray-600 mb-6">
+            نظام حجز القاعات المدرسية الذكي
           </p>
           
-          {/* وصف الموقع */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-soft p-6 max-w-4xl mx-auto mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-700">
-              <div className="flex flex-col items-center">
-                <div className="bg-blue-100 p-3 rounded-full mb-3">
-                  <FaCalendarCheck className="text-2xl text-blue-600" />
-                </div>
-                <h3 className="font-semibold font-cairo mb-2">حجز سهل وسريع</h3>
-                <p className="text-sm text-center font-cairo">
-                  احجز القاعات الدراسية بسهولة من خلال الجدول الأسبوعي التفاعلي
-                </p>
-              </div>
-              
-              <div className="flex flex-col items-center">
-                <div className="bg-green-100 p-3 rounded-full mb-3">
-                  <FaUsers className="text-2xl text-green-600" />
-                </div>
-                <h3 className="font-semibold font-cairo mb-2">تزامن فوري</h3>
-                <p className="text-sm text-center font-cairo">
-                  تحديثات مباشرة لجميع المستخدمين لضمان عدم تضارب الحجوزات
-                </p>
-              </div>
-              
-              <div className="flex flex-col items-center">
-                <div className="bg-purple-100 p-3 rounded-full mb-3">
-                  <FaDoorOpen className="text-2xl text-purple-600" />
-                </div>
-                <h3 className="font-semibold font-cairo mb-2">إدارة شاملة</h3>
-                <p className="text-sm text-center font-cairo">
-                  متابعة جميع القاعات والحجوزات مع إحصائيات مفصلة ومرونة عالية
-                </p>
-              </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
+            <LiveClock />
+            <div className="text-lg text-gray-700 font-medium">
+              {todayDateString}
             </div>
           </div>
           
-          <LiveClock />
+          {/* مفتاح تبديل النظام */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-white rounded-xl shadow-lg p-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">النظام التقليدي</span>
+                <button
+                  onClick={toggleFirebase}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    useFirebase ? 'bg-orange-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      useFirebase ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                  <FaFireAlt className="text-orange-500" />
+                  Firebase المطور
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* مؤشر نوع النظام */}
+          <div className="flex justify-center">
+            <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+              useFirebase 
+                ? 'bg-orange-100 text-orange-800 border border-orange-200' 
+                : 'bg-blue-100 text-blue-800 border border-blue-200'
+            }`}>
+              {useFirebase ? '🔥 نظام Firebase المطور' : '📡 النظام التقليدي'}
+              {useFirebase && connection?.isOnline && (
+                <span className="ml-2">• متصل</span>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-blue-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 font-cairo font-semibold">حجوزات اليوم</p>
-                <p className="text-3xl font-bold text-blue-800">{todayCount}</p>
-              </div>
-              <FaCalendarCheck className="text-4xl text-blue-500" />
-            </div>
+        {/* المحتوى الرئيسي */}
+        {useFirebase && appReady ? (
+          // Firebase Dashboard
+          <FirebaseDashboard />
+        ) : useFirebase && !appReady ? (
+          // Loading Firebase
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-600 mx-auto mb-4"></div>
+            <p className="text-xl text-gray-600 mb-2">جاري تحميل Firebase...</p>
+            <p className="text-sm text-gray-500">قد يستغرق هذا بضع ثوان</p>
           </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 font-cairo font-semibold">القاعات المتاحة</p>
-                <p className="text-3xl font-bold text-green-800">33</p>
-              </div>
-              <FaDoorOpen className="text-4xl text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-600 font-cairo font-semibold">فترة الطابور</p>
-                <p className="text-3xl font-bold text-purple-800">{assemblyBookings.length}</p>
-              </div>
-              <FaFlag className="text-4xl text-purple-500" />
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Link href="/bookings" className="block">
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold font-cairo mb-2">📅 حجز قاعة</h3>
-                  <p className="font-cairo opacity-90">احجز قاعة دراسية الآن</p>
+        ) : (
+          // Traditional Dashboard
+          <div className="space-y-8">
+            {/* إحصائيات سريعة */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-600 text-sm font-medium">حجوزات اليوم</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {loading ? '...' : stats.todayBookings}
+                    </p>
+                  </div>
+                  <FaCalendarCheck className="text-3xl text-blue-500" />
                 </div>
-                <FaArrowRight className="text-3xl" />
               </div>
-            </div>
-          </Link>
 
-          <Link href="/rooms" className="block">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold font-cairo mb-2">🏫 إدارة القاعات</h3>
-                  <p className="font-cairo opacity-90">عرض وإدارة القاعات</p>
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-600 text-sm font-medium">القاعات المتاحة</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {stats.availableRooms}
+                    </p>
+                  </div>
+                  <FaDoorOpen className="text-3xl text-green-500" />
                 </div>
-                <FaArrowRight className="text-3xl" />
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-600 text-sm font-medium">المعلمين النشطين</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {loading ? '...' : stats.activeTeachers}
+                    </p>
+                  </div>
+                  <FaUsers className="text-3xl text-purple-500" />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-600 text-sm font-medium">الحجوزات النشطة</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {loading ? '...' : stats.activeBookings}
+                    </p>
+                  </div>
+                  <FaFlag className="text-3xl text-orange-500" />
+                </div>
               </div>
             </div>
-          </Link>
-        </div>
 
-        {/* Recent Bookings Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Latest Bookings */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 font-cairo flex items-center">
-                <FaClock className="text-blue-500 ml-3" />
-                آخر الحجوزات
-              </h2>
-              <Link href="/bookings" className="text-blue-500 hover:text-blue-700 font-cairo">
-                عرض الكل
+            {/* روابط سريعة */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Link href="/bookings" className="group">
+                <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 border hover:border-blue-300">
+                  <div className="text-center">
+                    <FaCalendarCheck className="text-5xl text-blue-500 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">إدارة الحجوزات</h3>
+                    <p className="text-gray-600 mb-4">حجز القاعات وإدارة المواعيد</p>
+                    <div className="flex items-center justify-center text-blue-600 group-hover:text-blue-700">
+                      <span className="ml-2">ابدأ الآن</span>
+                      <FaArrowRight />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              <Link href="/rooms" className="group">
+                <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 border hover:border-green-300">
+                  <div className="text-center">
+                    <FaDoorOpen className="text-5xl text-green-500 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">القاعات المتاحة</h3>
+                    <p className="text-gray-600 mb-4">عرض وإدارة القاعات المدرسية</p>
+                    <div className="flex items-center justify-center text-green-600 group-hover:text-green-700">
+                      <span className="ml-2">استعراض</span>
+                      <FaArrowRight />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              <Link href="/statistics" className="group">
+                <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 border hover:border-purple-300">
+                  <div className="text-center">
+                    <FaUsers className="text-5xl text-purple-500 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">الإحصائيات</h3>
+                    <p className="text-gray-600 mb-4">تقارير وإحصائيات مفصلة</p>
+                    <div className="flex items-center justify-center text-purple-600 group-hover:text-purple-700">
+                      <span className="ml-2">عرض التقارير</span>
+                      <FaArrowRight />
+                    </div>
+                  </div>
+                </div>
               </Link>
             </div>
-            
-            {recentBookings.length > 0 ? (
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {recentBookings.map((item) => (
-                  <div 
-                    key={item.key} 
-                    className="border border-gray-200 rounded-lg p-4 hover:bg-blue-50 hover:border-blue-300 transition-all cursor-pointer transform hover:scale-[1.02]"
-                    onClick={() => navigateToBooking(item.booking)}
-                    title="انقر للانتقال إلى موقع الحجز في صفحة الحجوزات"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-1">
-                          <FaUsers className="text-blue-500 ml-2 text-sm" />
-                          <span className="font-semibold text-gray-800 font-cairo">{item.booking.teacher}</span>
-                        </div>
-                        <div className="flex items-center mb-1">
-                          <FaDoorOpen className="text-green-500 ml-2 text-sm" />
-                          <span className="text-gray-600 font-cairo">{item.booking.room}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <FaBook className="text-purple-500 ml-2 text-sm" />
-                          <span className="text-gray-600 font-cairo">{item.booking.subject}</span>
-                        </div>
-                      </div>
-                      <div className="text-left">
-                        <div className="text-sm text-gray-500 font-cairo">{item.booking.day}</div>
-                        <div className="text-sm text-gray-500 font-cairo">{item.booking.period}</div>
-                        <div className="text-xs text-gray-400 font-cairo">{formatTime(item.booking.createdAt)}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <FaPhoneAlt className="text-gray-400 ml-2 text-xs" />
-                        <span className="text-gray-500 font-cairo">{item.booking.phone}</span>
-                        <span className="mx-2 text-gray-300">|</span>
-                        <span className="text-gray-500 font-cairo">{item.booking.grade} - {item.booking.section}</span>
-                      </div>
-                      <div className="text-xs text-blue-500 font-cairo opacity-0 group-hover:opacity-100 transition-opacity">
-                        انقر للعرض →
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500 font-cairo">
-                <FaCalendarCheck className="text-4xl mx-auto mb-4 opacity-50" />
-                <p>لا توجد حجوزات حالياً</p>
-              </div>
-            )}
           </div>
+        )}
 
-          {/* Assembly Period Bookings */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 font-cairo flex items-center">
-                <FaFlag className="text-purple-500 ml-3" />
-                حجوزات فترة الطابور
-              </h2>
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-cairo">
-                اليوم
-              </span>
-            </div>
+        {/* معلومات إضافية */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mt-12">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              نظام إدارة القاعات الذكي
+            </h2>
+            <p className="text-gray-600 mb-6 max-w-3xl mx-auto">
+              نظام زاوية 2025 يوفر حلولاً متكاملة لإدارة حجوزات القاعات المدرسية بكفاءة عالية، 
+              مع إمكانيات التزامن الفوري وإدارة شاملة للبيانات.
+            </p>
             
-            {assemblyBookings.length > 0 ? (
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {assemblyBookings.map((item) => (
-                  <div 
-                    key={item.key} 
-                    className="border border-purple-200 rounded-lg p-4 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all cursor-pointer transform hover:scale-[1.02]"
-                    onClick={() => navigateToBooking(item.booking)}
-                    title="انقر للانتقال إلى موقع الحجز في صفحة الحجوزات"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-1">
-                          <FaUsers className="text-purple-600 ml-2 text-sm" />
-                          <span className="font-semibold text-purple-800 font-cairo">{item.booking.teacher}</span>
-                        </div>
-                        <div className="flex items-center mb-1">
-                          <FaDoorOpen className="text-purple-600 ml-2 text-sm" />
-                          <span className="text-purple-700 font-cairo">{item.booking.room}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <FaBook className="text-purple-600 ml-2 text-sm" />
-                          <span className="text-purple-700 font-cairo">{item.booking.subject}</span>
-                        </div>
-                      </div>
-                      <div className="text-left">
-                        <div className="text-sm text-purple-600 font-cairo font-semibold">فترة الطابور</div>
-                        <div className="text-xs text-purple-500 font-cairo">{formatTime(item.booking.createdAt)}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <FaPhoneAlt className="text-purple-500 ml-2 text-xs" />
-                        <span className="text-purple-600 font-cairo">{item.booking.phone}</span>
-                        <span className="mx-2 text-purple-300">|</span>
-                        <span className="text-purple-600 font-cairo">{item.booking.grade} - {item.booking.section}</span>
-                      </div>
-                      <div className="text-xs text-purple-600 font-cairo opacity-0 group-hover:opacity-100 transition-opacity">
-                        انقر للعرض →
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+              <div className="text-center">
+                <FaClock className="text-3xl text-blue-500 mx-auto mb-2" />
+                <h4 className="font-semibold text-gray-800">تزامن فوري</h4>
+                <p className="text-sm text-gray-600">تحديثات لحظية عبر جميع الأجهزة</p>
               </div>
-            ) : (
-              <div className="text-center py-8 text-purple-400 font-cairo">
-                <FaFlag className="text-4xl mx-auto mb-4 opacity-50" />
-                <p>لا توجد حجوزات لفترة الطابور اليوم</p>
+              
+              <div className="text-center">
+                <FaPhoneAlt className="text-3xl text-green-500 mx-auto mb-2" />
+                <h4 className="font-semibold text-gray-800">سهولة الاستخدام</h4>
+                <p className="text-sm text-gray-600">واجهة بسيطة ومناسبة للجميع</p>
               </div>
-            )}
+              
+              <div className="text-center">
+                <FaBook className="text-3xl text-purple-500 mx-auto mb-2" />
+                <h4 className="font-semibold text-gray-800">إدارة شاملة</h4>
+                <p className="text-sm text-gray-600">تتبع كامل للحجوزات والإحصائيات</p>
+              </div>
+              
+              <div className="text-center">
+                <FaFireAlt className="text-3xl text-orange-500 mx-auto mb-2" />
+                <h4 className="font-semibold text-gray-800">موثوقية عالية</h4>
+                <p className="text-sm text-gray-600">نسخ احتياطية وحماية البيانات</p>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
-
+      </div>
+      
       <Footer />
     </div>
   )

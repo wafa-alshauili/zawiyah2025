@@ -1,0 +1,191 @@
+{
+  "timestamp": "2025-10-06T09:28:17.017Z",
+  "reportId": "HEALTH-1759742897017-L0HX",
+  "systemInfo": {
+    "nodeVersion": "v22.14.0",
+    "platform": "win32",
+    "architecture": "x64",
+    "uptime": 1,
+    "environment": "development",
+    "pid": 13184,
+    "cwd": "C:\\Users\\وفاء الشعيلي\\Desktop\\Zawiyah2025",
+    "timestamp": "2025-10-06T09:28:17.017Z"
+  },
+  "componentChecks": {
+    "ملفات البيانات الثابتة": {
+      "status": "سليم",
+      "message": "جميع ملفات البيانات متوفرة وقابلة للوصول",
+      "healthy": true,
+      "details": {
+        "fileStats": {
+          "bookings.json": {
+            "size": 5282,
+            "modified": "2025-10-06T08:46:57.734Z",
+            "accessible": true
+          },
+          "students.json": {
+            "size": 300,
+            "modified": "2025-10-06T09:01:19.769Z",
+            "accessible": true
+          }
+        }
+      }
+    },
+    "نظام Socket.IO": {
+      "status": "سليم",
+      "message": "نظام Socket.IO جاهز للاتصالات",
+      "healthy": true,
+      "details": {
+        "activeConnections": 0,
+        "lastConnection": null
+      }
+    },
+    "خدمة الحجوزات": {
+      "status": "سليم",
+      "message": "خدمة الحجوزات تعمل بطريقة طبيعية",
+      "healthy": true,
+      "details": {
+        "totalBookings": 9,
+        "todayBookings": 5,
+        "lastBooking": {
+          "id": "regular-5-1-2025-09-26-الحصة-الرابعة",
+          "type": "regular",
+          "classroom": "القاعة الذكية",
+          "teacher": "حليمة",
+          "phone": "",
+          "subject": "حاسوب",
+          "grade": "5",
+          "date": "2025-09-26",
+          "timeSlot": "الحصة الرابعة",
+          "notes": "",
+          "createdAt": "2025-09-26T20:23:02.809Z",
+          "referenceNumber": "MIG-1759740417719-BX4DPD",
+          "_migrated": {
+            "originalKey": "room-day-period-1",
+            "originalFormat": "old_format",
+            "migratedAt": "2025-10-06T08:46:57.719Z"
+          }
+        }
+      }
+    },
+    "نظام النسخ الاحتياطي": {
+      "status": "سليم",
+      "message": "نظام النسخ الاحتياطي يعمل بطريقة طبيعية",
+      "healthy": true,
+      "details": {
+        "totalBackups": 31,
+        "recentBackups": 27,
+        "lastBackup": "timeslots_backup_2025-10-06T09-06-08-122Z.json"
+      }
+    },
+    "مراقب فقدان البيانات": {
+      "status": "سليم",
+      "message": "مراقب فقدان البيانات مفعل ويعمل",
+      "healthy": true,
+      "details": {
+        "monitorFile": "موجود",
+        "checkInterval": "30 ثانية",
+        "lastCheck": "2025-10-06T09:28:17.025Z"
+      }
+    },
+    "نظام الطوارئ": {
+      "status": "سليم",
+      "message": "نظام الطوارئ جاهز للاستخدام",
+      "healthy": true,
+      "details": {
+        "recoveryFile": "موجود",
+        "backupSources": "متعددة",
+        "autoRecovery": "مفعل"
+      }
+    }
+  },
+  "memoryCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "استخدام الذاكرة: 10 MB",
+    "details": {
+      "heapUsed": 10,
+      "heapTotal": 18,
+      "external": 2,
+      "rss": 56,
+      "usage": 57
+    }
+  },
+  "diskCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "مساحة البيانات: 1 MB",
+    "details": {
+      "dataDirectorySize": 1,
+      "lastModified": "2025-10-06T09:03:54.861Z"
+    }
+  },
+  "performanceCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "متوسط زمن الاستجابة: 1 ms",
+    "details": {
+      "totalDuration": 1,
+      "averageDuration": 1,
+      "tests": [
+        {
+          "operation": "قراءة ملف الحجوزات",
+          "duration": 1,
+          "success": true
+        },
+        {
+          "operation": "معالجة JSON",
+          "duration": 0,
+          "success": true
+        }
+      ],
+      "cpuUsage": {
+        "user": 531000,
+        "system": 265000
+      }
+    }
+  },
+  "dataIntegrityCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "جميع البيانات سليمة",
+    "details": {
+      "totalBookings": 9,
+      "totalStudents": 2,
+      "issues": [],
+      "lastCheck": "2025-10-06T09:28:17.096Z"
+    }
+  },
+  "networkCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "اتصال الشبكة مستقر",
+    "details": {
+      "localConnections": "متاحة",
+      "socketConnections": "جاهزة",
+      "lastCheck": "2025-10-06T09:28:17.096Z"
+    }
+  },
+  "securityCheck": {
+    "status": "سليم",
+    "healthy": true,
+    "message": "لا توجد مشاكل أمنية واضحة",
+    "details": {
+      "issues": [],
+      "environment": "development",
+      "lastCheck": "2025-10-06T09:28:17.096Z"
+    }
+  },
+  "recommendations": [
+    "النظام يعمل بصورة ممتازة - استمر في المراقبة الدورية"
+  ],
+  "overallHealth": {
+    "status": "ممتاز",
+    "score": 5,
+    "healthPercentage": 100,
+    "healthyComponents": 6,
+    "totalComponents": 6,
+    "issues": []
+  },
+  "checkDuration": 80
+}
