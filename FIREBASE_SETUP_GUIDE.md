@@ -31,9 +31,34 @@
 
 #### للواجهة الأمامية (Frontend):
 1. اذهب إلى **Project Settings** > **General**
+   - انقر على أيقونة الترس ⚙️ في الشريط الجانبي الأيسر
+   - اختر "Project settings"
+   
 2. في قسم "Your apps"، انقر على "إضافة تطبيق" > "Web"
+   - ستجد قسم "Your apps" في منتصف الصفحة
+   - انقر على أيقونة الويب `</>`
+   
 3. أدخل اسم التطبيق: `zawiyah2025-client`
-4. انسخ كود التكوين
+   - لا تختر "Firebase Hosting" الآن
+   - انقر "Register app"
+   
+4. **انسخ كود التكوين من الصندوق الظاهر:**
+   ```javascript
+   // ستظهر شاشة مثل هذه - انسخ القيم منها:
+   const firebaseConfig = {
+     apiKey: "AIzaSyD...",                    // انسخ هذا
+     authDomain: "zawiyah2025.firebaseapp.com",
+     projectId: "zawiyah2025",               // انسخ هذا
+     storageBucket: "zawiyah2025.appspot.com",
+     messagingSenderId: "123456789",         // انسخ هذا
+     appId: "1:123456789:web:abc123def456"   // انسخ هذا
+   };
+   ```
+   
+5. **إذا لم تجد الكود، يمكنك الوصول إليه لاحقاً:**
+   - اذهب إلى Project Settings > General
+   - ابحث عن تطبيقك في قسم "Your apps"
+   - انقر على أيقونة "Config" أو `</>`
 
 #### للخادم (Backend):
 1. اذهب إلى **Project Settings** > **Service accounts**
