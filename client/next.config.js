@@ -17,10 +17,10 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Environment variables
+  // Environment variables (exposed to the browser via NEXT_PUBLIC_*)
   env: {
-    API_URL: process.env.API_URL || 'http://localhost:3001',
-    SOCKET_URL: process.env.SOCKET_URL || 'http://localhost:3001',
+    NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3002',
+    NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002',
   }
 }
 

@@ -1,0 +1,32 @@
+# Environment Variables for Vercel Dashboard
+# =============================================
+# Go to: https://vercel.com/wafa-alshauilis-projects/zawiyah2025/settings/environment-variables
+# Add each variable below to BOTH Production AND Preview environments
+
+# Firebase Configuration
+NEXT_PUBLIC_ENABLE_FIREBASE=true
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAGZPhBsOGIkMUfw1CjbohrUIj9KoSlCbY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=zawiyah2025-e5c17.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=zawiyah2025-e5c17
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=zawiyah2025-e5c17.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=811960909483
+NEXT_PUBLIC_FIREBASE_APP_ID=1:811960909483:web:7fd5fe0fbb593c3fcb81ee
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-E9RYXYQLL6
+
+# Server Configuration (UPDATE THESE AFTER BACKEND DEPLOYMENT)
+NEXT_PUBLIC_SERVER_URL=https://your-backend-url.railway.app
+NEXT_PUBLIC_SOCKET_URL=https://your-backend-url.railway.app
+
+# Development/Debug Settings
+NEXT_PUBLIC_ENABLE_TRADITIONAL=false
+NEXT_PUBLIC_ENABLE_DEBUG=false
+NODE_ENV=production
+
+# =============================================
+# INSTRUCTIONS:
+# 1. Go to Vercel Dashboard -> Project Settings -> Environment Variables
+# 2. Add each variable above to Production environment
+# 3. Add each variable above to Preview environment 
+# 4. After adding all variables, trigger a new deployment
+# 5. For NEXT_PUBLIC_SERVER_URL and NEXT_PUBLIC_SOCKET_URL, use your Railway/Render backend URL once deployed
+# =============================================
