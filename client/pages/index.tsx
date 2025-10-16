@@ -41,8 +41,20 @@ export default function HomePage() {
   useEffect(() => {
     setIsClient(true)
     
-    // فحص إعدادات المستخدم
-    const firebaseEnabled = localStorage.getItem('useFirebase') === 'true'
+    // فحص إعدادات المستخدم - Firebase افتراضي في الإنتاج
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    const storedPreference = localStorage.getItem('useFirebase')
+    
+    let firebaseEnabled
+    if (storedPreference !== null) {
+      // إذا كان هناك تفضيل محفوظ، استخدمه
+      firebaseEnabled = storedPreference === 'true'
+    } else {
+      // الافتراضي: Firebase في الإنتاج، التقليدي في التطوير
+      firebaseEnabled = !isDevelopment
+      localStorage.setItem('useFirebase', firebaseEnabled.toString())
+    }
+    
     setUseFirebase(firebaseEnabled)
     
     if (firebaseEnabled) {

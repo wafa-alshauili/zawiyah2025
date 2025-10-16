@@ -29,8 +29,16 @@ const firebaseConfig = {
 };
 
 // تهيئة Firebase
+console.log('🔥 تهيئة Firebase بالإعدادات:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+  hasApiKey: !!firebaseConfig.apiKey
+});
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+console.log('✅ تم تهيئة Firebase وFirestore بنجاح');
 
 class FirebaseService {
   constructor() {
