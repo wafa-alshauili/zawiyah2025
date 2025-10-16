@@ -244,6 +244,73 @@ export default function HomePage() {
                   Firebase المطور
                 </span>
               </div>
+              
+              {/* زر إعداد Firebase السريع */}
+              {useFirebase && !appReady && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={async () => {
+                      try {
+                        console.log('🔥 إعداد Firebase السريع...');
+                        
+                        // تهيئة البيانات الأساسية
+                        const { initializeApp } = await import('firebase/app');
+                        const { getFirestore, collection, doc, setDoc } = await import('firebase/firestore');
+                        
+                        const firebaseConfig = {
+                          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+                          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+                          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+                          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+                          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+                        };
+                        
+                        const app = initializeApp(firebaseConfig, 'setup-app');
+                        const db = getFirestore(app);
+                        
+                        // بيانات أساسية
+                        const basicClassrooms = [
+                          { name_ar: 'القاعة الذكية', type: 'special', capacity: 30, grade: 0, section: '', isActive: true },
+                          { name_ar: 'الصف الخامس - أ', type: 'classroom', capacity: 25, grade: 5, section: 'أ', isActive: true },
+                          { name_ar: 'الصف السادس - أ', type: 'classroom', capacity: 25, grade: 6, section: 'أ', isActive: true }
+                        ];
+                        
+                        const basicTimeSlots = [
+                          { name_ar: 'الحصة الأولى', start_time: '07:00', end_time: '07:45', type: 'academic', order: 1 },
+                          { name_ar: 'الحصة الثانية', start_time: '07:45', end_time: '08:30', type: 'academic', order: 2 },
+                          { name_ar: 'وقت الطابور', start_time: '08:30', end_time: '08:45', type: 'assembly', order: 3 }
+                        ];
+                        
+                        // رفع البيانات
+                        for (let i = 0; i < basicClassrooms.length; i++) {
+                          await setDoc(doc(db, 'classrooms', `classroom-${i+1}`), {
+                            ...basicClassrooms[i],
+                            id: `classroom-${i+1}`
+                          });
+                        }
+                        
+                        for (let i = 0; i < basicTimeSlots.length; i++) {
+                          await setDoc(doc(db, 'timeslots', `timeslot-${i+1}`), {
+                            ...basicTimeSlots[i],
+                            id: `timeslot-${i+1}`
+                          });
+                        }
+                        
+                        console.log('✅ تم إعداد البيانات الأساسية');
+                        setTimeout(() => window.location.reload(), 1000);
+                        
+                      } catch (error) {
+                        console.error('❌ خطأ في الإعداد السريع:', error);
+                        alert('حدث خطأ في الإعداد. يرجى المحاولة مرة أخرى.');
+                      }
+                    }}
+                    className="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                  >
+                    🔥 إعداد Firebase السريع
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
